@@ -6,7 +6,7 @@ import About from "./components/pages/About";
 import Services from "./components/pages/Services";
 import Contact from "./components/pages/contact";
 import Blog from "./components/pages/blog";
-import AdminPanel from "./components/admin/AdminPanel";
+import AdminPanel from "./components/admin/NewAdminPanel";
 import AdminLogin from "./components/admin/AdminLogin"; // ✅ Import karo
 import ProtectedRoute from "./components/ProtectedRoute"; // ✅ Import karo
 
