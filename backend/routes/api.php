@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\DB; 
 /*
 |--------------------------------------------------------------------------
 | API Controllers
@@ -104,3 +104,22 @@ Route::prefix('admin')->group(function () {
     Route::delete('/{table}/{id}', [AdminController::class, 'destroy']);
 
 });
+
+Route::post('/plan-purchase', [App\Http\Controllers\PlanPurchaseController::class, 'store']);
+
+Route::get('/pricing-plans', function() {
+    $plans = DB::table('pricing_plans')
+               ->where('is_active', 1)
+               ->orderBy('order_number')
+               ->get();
+    return response()->json(['data' => $plans]);
+});
+
+Route::get('/pricing-features', function() {
+    $features = DB::table('pricing_features')->get();
+    return response()->json(['data' => $features]);
+});
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/admin/plan-purchases', [App\Http\Controllers\Admin\PlanPurchaseController::class, 'index']);
+    Route::put('/admin/plan-purchases/{id}', [App\Http\Controllers\Admin\PlanPurchaseController::class, 'update']);
+}); 
