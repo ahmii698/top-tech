@@ -508,7 +508,7 @@ export default function NewAdminPanel() {
   );
 }
 
-// ==================== DATA TABLE COMPONENT WITH IMAGE UPLOAD ====================
+// ==================== DATA TABLE COMPONENT WITH IMAGE UPLOAD & EMAIL REPLY ====================
 const DataTable = ({ table }: { table: string }) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -520,7 +520,7 @@ const DataTable = ({ table }: { table: string }) => {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [selectedEmail, setSelectedEmail] = useState({ to: '', name: '', plan: '' });
+  const [selectedEmail, setSelectedEmail] = useState({ to: '', name: '', subject: '', message: '', type: '' });
   const [uploadingImage, setUploadingImage] = useState(false);
   const rowsPerPage = 10;
 
@@ -683,22 +683,43 @@ const DataTable = ({ table }: { table: string }) => {
     }
   };
 
-  const handleEmailReply = (email: string, name: string, planName: string) => {
-    setSelectedEmail({ to: email, name, plan: planName });
+  // Email Reply Handler - Works for both Plan Purchases and Appointments
+  const handleEmailReply = (row: any, type: 'plan' | 'appointment') => {
+    let email = '';
+    let name = '';
+    let subject = '';
+    let message = '';
+    
+    if (type === 'plan') {
+      email = row.email || row.customer_email;
+      name = row.name || row.full_name;
+      subject = `Re: ${row.plan_name || 'Plan'} Purchase Inquiry - ${name}`;
+      message = `Dear ${name},\n\nThank you for your interest in our ${row.plan_name || 'plan'} plan.\n\n`;
+    } else if (type === 'appointment') {
+      email = row.email || row.customer_email;
+      name = row.full_name || row.name || row.customer_name;
+      subject = `Re: Your Appointment on ${row.appointment_date || ''} - ${name}`;
+      message = `Dear ${name},\n\nThank you for scheduling an appointment with us on ${row.appointment_date} at ${row.appointment_time || 'your preferred time'}.\n\n`;
+    }
+    
+    setSelectedEmail({ to: email, name, subject, message, type });
     setShowEmailModal(true);
   };
 
   const handleSendEmail = async (emailData: any) => {
     try {
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_URL}/send-email`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: emailData.to,
-          email: emailData.to,
-          message: emailData.message
+          to: emailData.to,
+          subject: emailData.subject,
+          message: emailData.message,
+          name: emailData.name
         })
       });
 
@@ -747,6 +768,15 @@ const DataTable = ({ table }: { table: string }) => {
 
   const isImageField = (key: string) => {
     return key.includes('image') || key.includes('img') || key.includes('photo') || key.includes('icon');
+  };
+
+  // Check if current table has email fields
+  const hasEmailField = (row: any) => {
+    return row.email || row.customer_email;
+  };
+
+  const getCustomerName = (row: any) => {
+    return row.full_name || row.name || row.customer_name || 'Customer';
   };
 
   return (
@@ -1028,7 +1058,7 @@ const DataTable = ({ table }: { table: string }) => {
                       <th style={{ 
                         padding: "16px", 
                         textAlign: "center", 
-                        width: "220px",
+                        width: "280px",
                         borderBottom: "1px solid #222222"
                       }}>
                         Actions
@@ -1117,13 +1147,19 @@ const DataTable = ({ table }: { table: string }) => {
                           borderBottom: "1px solid #1a1a1a"
                         }}>
                           <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
-                            {row.customer_email && (
+                            {/* Email Reply Button - Works for Plan Purchases AND Appointments */}
+                            {hasEmailField(row) && (
                               <button
-                                onClick={() => handleEmailReply(
-                                  row.customer_email, 
-                                  row.customer_name || row.name || 'Customer',
-                                  row.plan_name || ''
-                                )}
+                                onClick={() => {
+                                  if (table === 'plan_purchases') {
+                                    handleEmailReply(row, 'plan');
+                                  } else if (table === 'appointments') {
+                                    handleEmailReply(row, 'appointment');
+                                  } else {
+                                    // Fallback for any table with email
+                                    handleEmailReply(row, 'plan');
+                                  }
+                                }}
                                 style={{
                                   padding: "8px 14px",
                                   background: "rgba(102, 126, 234, 0.15)",
@@ -1139,12 +1175,20 @@ const DataTable = ({ table }: { table: string }) => {
                                   transition: "all 0.2s"
                                 }}
                                 title="Reply via Email"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = "rgba(102, 126, 234, 0.25)";
+                                  e.currentTarget.style.transform = "translateY(-1px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = "rgba(102, 126, 234, 0.15)";
+                                  e.currentTarget.style.transform = "translateY(0)";
+                                }}
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                                   <polyline points="22,6 12,13 2,6"/>
                                 </svg>
-                                Email
+                                Email Reply
                               </button>
                             )}
                             
@@ -1163,6 +1207,16 @@ const DataTable = ({ table }: { table: string }) => {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "6px"
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#222222";
+                                e.currentTarget.style.color = "#ffffff";
+                                e.currentTarget.style.borderColor = "#444444";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "#1a1a1a";
+                                e.currentTarget.style.color = "#888888";
+                                e.currentTarget.style.borderColor = "#333333";
                               }}
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1187,6 +1241,14 @@ const DataTable = ({ table }: { table: string }) => {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "6px"
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "rgba(255, 107, 107, 0.1)";
+                                e.currentTarget.style.transform = "translateY(-1px)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "transparent";
+                                e.currentTarget.style.transform = "translateY(0)";
                               }}
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1293,12 +1355,13 @@ const DataTable = ({ table }: { table: string }) => {
         )}
       </div>
 
-      {/* Email Reply Modal */}
+      {/* Email Reply Modal - Works for Both */}
       {showEmailModal && (
         <EmailReplyModal
           email={selectedEmail.to}
           customerName={selectedEmail.name}
-          planName={selectedEmail.plan}
+          subject={selectedEmail.subject}
+          defaultMessage={selectedEmail.message}
           onClose={() => setShowEmailModal(false)}
           onSend={handleSendEmail}
         />
@@ -1554,12 +1617,12 @@ const DataTable = ({ table }: { table: string }) => {
 };
 
 // ==================== EMAIL REPLY MODAL ====================
-const EmailReplyModal = ({ email, customerName, planName, onClose, onSend }: any) => {
+const EmailReplyModal = ({ email, customerName, subject, defaultMessage, onClose, onSend }: any) => {
   const [emailData, setEmailData] = useState({
     to: email,
-    subject: `Re: ${planName} Plan Inquiry - ${customerName}`,
-    message: `Dear ${customerName},\n\nThank you for your interest in our ${planName} plan.\n\n`,
-    recipientType: 'custom'
+    subject: subject,
+    message: defaultMessage,
+    name: customerName
   });
   const [sending, setSending] = useState(false);
 
@@ -1632,6 +1695,16 @@ const EmailReplyModal = ({ email, customerName, planName, onClose, onSend }: any
               justifyContent: "center",
               transition: "all 0.2s"
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#222222";
+              e.currentTarget.style.color = "#ffffff";
+              e.currentTarget.style.borderColor = "#444444";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#1a1a1a";
+              e.currentTarget.style.color = "#888888";
+              e.currentTarget.style.borderColor = "#333333";
+            }}
           >
             ✕
           </button>
@@ -1690,6 +1763,14 @@ const EmailReplyModal = ({ email, customerName, planName, onClose, onSend }: any
               transition: "all 0.2s",
               fontWeight: "500"
             }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "#667eea";
+              e.target.style.background = "#222222";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "#333333";
+              e.target.style.background = "#1a1a1a";
+            }}
           />
         </div>
 
@@ -1723,6 +1804,14 @@ const EmailReplyModal = ({ email, customerName, planName, onClose, onSend }: any
               lineHeight: "1.6",
               fontWeight: "400"
             }}
+            onFocus={(e) => {
+              e.target.style.borderColor = "#667eea";
+              e.target.style.background = "#222222";
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = "#333333";
+              e.target.style.background = "#1a1a1a";
+            }}
           />
         </div>
 
@@ -1739,6 +1828,16 @@ const EmailReplyModal = ({ email, customerName, planName, onClose, onSend }: any
               color: "#888888",
               fontWeight: "600",
               transition: "all 0.2s"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#222222";
+              e.currentTarget.style.color = "#ffffff";
+              e.currentTarget.style.borderColor = "#444444";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#1a1a1a";
+              e.currentTarget.style.color = "#888888";
+              e.currentTarget.style.borderColor = "#333333";
             }}
           >
             Cancel
@@ -1761,6 +1860,16 @@ const EmailReplyModal = ({ email, customerName, planName, onClose, onSend }: any
               display: "flex",
               alignItems: "center",
               gap: "8px"
+            }}
+            onMouseEnter={(e) => {
+              if (!sending) {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.6)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.4)";
             }}
           >
             {sending ? (
@@ -1844,6 +1953,16 @@ const Modal = ({ title, children, onClose, onSubmit }: any) => (
           color: "#888888",
           fontWeight: "600",
           transition: "all 0.2s"
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "#222222";
+          e.currentTarget.style.color = "#ffffff";
+          e.currentTarget.style.borderColor = "#444444";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "#1a1a1a";
+          e.currentTarget.style.color = "#888888";
+          e.currentTarget.style.borderColor = "#333333";
         }}>
           Cancel
         </button>
@@ -1858,6 +1977,14 @@ const Modal = ({ title, children, onClose, onSubmit }: any) => (
           fontWeight: "600",
           transition: "all 0.2s",
           boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)"
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.6)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.4)";
         }}>
           Save Changes
         </button>

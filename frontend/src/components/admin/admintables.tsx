@@ -23,7 +23,7 @@ export default function AdminTables({ table }: Props) {
   const rowsPerPage = 10;
   const [uploadingImage, setUploadingImage] = useState<{field: string, isNew: boolean} | null>(null);
 
-  // Email Modal States
+  // Email Modal States - Works for both Appointments and Plan Purchases
   const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
   const [selectedEmailRecord, setSelectedEmailRecord] = useState<Record | null>(null);
   const [emailData, setEmailData] = useState({
@@ -195,7 +195,7 @@ export default function AdminTables({ table }: Props) {
     }
   };
 
-  // Email Send Function
+  // Email Send Function - Works for both Appointments and Plan Purchases
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEmailRecord) return;
@@ -204,7 +204,18 @@ export default function AdminTables({ table }: Props) {
     
     try {
       const token = getToken();
-      const response = await fetch(`${API_URL}/admin/appointments/${selectedEmailRecord.id}/send-email`, {
+      
+      // Dynamic endpoint based on table type
+      let endpoint = '';
+      if (table === 'appointments') {
+        endpoint = `${API_URL}/admin/appointments/${selectedEmailRecord.id}/send-email`;
+      } else if (table === 'plan_purchases') {
+        endpoint = `${API_URL}/admin/plan-purchases/${selectedEmailRecord.id}/send-email`;
+      } else {
+        endpoint = `${API_URL}/admin/${table}/${selectedEmailRecord.id}/send-email`;
+      }
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -216,12 +227,15 @@ export default function AdminTables({ table }: Props) {
       const result = await response.json();
       
       if (result.success) {
-        showNotification(`✅ Email sent successfully to ${selectedEmailRecord.email}`, "success");
+        const customerEmail = selectedEmailRecord.email || selectedEmailRecord.customer_email;
+        showNotification(`✅ Email sent successfully to ${customerEmail}`, "success");
         
+        // Update status if changed
         if (emailData.status && emailData.status !== selectedEmailRecord.status) {
           await loadData();
         }
         
+        // Close modal and reset form
         setShowEmailModal(false);
         setSelectedEmailRecord(null);
         setEmailData({ subject: '', response_message: '', status: '' });
@@ -236,12 +250,27 @@ export default function AdminTables({ table }: Props) {
     }
   };
 
+  // Open Email Modal - Works for both Appointments and Plan Purchases
   const openEmailModal = (record: Record) => {
     setSelectedEmailRecord(record);
+    
+    // Set email subject and status based on table type
+    let subject = '';
+    let status = record.status || 'pending';
+    
+    if (table === 'appointments') {
+      subject = `Regarding your appointment on ${record.appointment_date || 'scheduled date'}`;
+    } else if (table === 'plan_purchases') {
+      const planName = record.plan_name || record.plan || 'selected plan';
+      subject = `Regarding your ${planName} plan purchase inquiry`;
+    } else {
+      subject = `Regarding your inquiry`;
+    }
+    
     setEmailData({
-      subject: `Regarding your appointment on ${record.appointment_date}`,
+      subject: subject,
       response_message: '',
-      status: record.status || 'pending'
+      status: status
     });
     setShowEmailModal(true);
   };
@@ -313,7 +342,22 @@ export default function AdminTables({ table }: Props) {
     }
   };
 
-  const isAppointmentsTable = table === 'appointments';
+  // Check if current table has email field (Appointments or Plan Purchases)
+  const hasEmailField = (row: Record): boolean => {
+    return !!(row.email || row.customer_email);
+  };
+
+  const getCustomerName = (row: Record): string => {
+    return row.full_name || row.name || row.customer_name || row.customer || 'Customer';
+  };
+
+  const getCustomerEmail = (row: Record): string => {
+    return row.email || row.customer_email || '';
+  };
+
+  const isEmailTable = (): boolean => {
+    return table === 'appointments' || table === 'plan_purchases';
+  };
 
   return (
     <div style={{ position: "relative" }}>
@@ -343,8 +387,8 @@ export default function AdminTables({ table }: Props) {
         </div>
       )}
 
-      {/* Email Modal */}
-      {isAppointmentsTable && showEmailModal && selectedEmailRecord && (
+      {/* Email Modal - Works for Appointments AND Plan Purchases */}
+      {isEmailTable() && showEmailModal && selectedEmailRecord && (
         <div
           style={{
             position: "fixed",
@@ -381,7 +425,7 @@ export default function AdminTables({ table }: Props) {
               marginBottom: "24px"
             }}>
               <h3 style={{ margin: 0, color: "#0f172a", fontSize: "22px", fontWeight: "600" }}>
-                📧 Send Email to {selectedEmailRecord.full_name}
+                📧 Send Email to {getCustomerName(selectedEmailRecord)}
               </h3>
               <button
                 onClick={() => setShowEmailModal(false)}
@@ -412,6 +456,7 @@ export default function AdminTables({ table }: Props) {
               </button>
             </div>
 
+            {/* Customer Info - Dynamic based on table */}
             <div style={{
               background: "#f8fafc",
               padding: "16px",
@@ -419,9 +464,22 @@ export default function AdminTables({ table }: Props) {
               marginBottom: "24px",
               border: "1px solid #e2e8f0"
             }}>
-              <p style={{ margin: "0 0 8px 0", fontSize: "14px" }}><strong>📧 Email:</strong> {selectedEmailRecord.email}</p>
-              <p style={{ margin: "0 0 8px 0", fontSize: "14px" }}><strong>📞 Phone:</strong> {selectedEmailRecord.phone || '-'}</p>
-              <p style={{ margin: "0", fontSize: "14px" }}><strong>📅 Appointment:</strong> {selectedEmailRecord.appointment_date} at {selectedEmailRecord.appointment_time}</p>
+              <p style={{ margin: "0 0 8px 0", fontSize: "14px" }}>
+                <strong>📧 Email:</strong> {getCustomerEmail(selectedEmailRecord)}
+              </p>
+              <p style={{ margin: "0 0 8px 0", fontSize: "14px" }}>
+                <strong>📞 Phone:</strong> {selectedEmailRecord.phone || selectedEmailRecord.customer_phone || '-'}
+              </p>
+              {table === 'appointments' && (
+                <p style={{ margin: "0", fontSize: "14px" }}>
+                  <strong>📅 Appointment:</strong> {selectedEmailRecord.appointment_date} at {selectedEmailRecord.appointment_time}
+                </p>
+              )}
+              {table === 'plan_purchases' && (
+                <p style={{ margin: "0", fontSize: "14px" }}>
+                  <strong>💰 Plan:</strong> {selectedEmailRecord.plan_name || selectedEmailRecord.plan || 'N/A'}
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleSendEmail}>
@@ -495,10 +553,20 @@ export default function AdminTables({ table }: Props) {
                   onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
                 >
                   <option value="">Keep Current Status</option>
-                  <option value="confirmed">✅ Confirmed</option>
-                  <option value="pending">⏳ Pending</option>
-                  <option value="cancelled">❌ Cancelled</option>
-                  <option value="completed">✔️ Completed</option>
+                  {table === 'appointments' ? (
+                    <>
+                      <option value="confirmed">✅ Confirmed</option>
+                      <option value="pending">⏳ Pending</option>
+                      <option value="cancelled">❌ Cancelled</option>
+                      <option value="completed">✔️ Completed</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="processing">⏳ Processing</option>
+                      <option value="completed">✅ Completed</option>
+                      <option value="cancelled">❌ Cancelled</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -778,7 +846,7 @@ export default function AdminTables({ table }: Props) {
                         fontSize: "13px",
                         textTransform: "uppercase",
                         letterSpacing: "0.5px",
-                        width: isAppointmentsTable ? "280px" : "200px"
+                        width: isEmailTable() ? "280px" : "200px"
                       }}>
                         Actions
                       </th>
@@ -850,7 +918,8 @@ export default function AdminTables({ table }: Props) {
 
                         <td style={{ padding: "16px", textAlign: "center" }}>
                           <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
-                            {table === 'appointments' && (
+                            {/* Email Button - Works for Appointments AND Plan Purchases */}
+                            {hasEmailField(row) && (
                               <button
                                 onClick={() => openEmailModal(row)}
                                 style={{
@@ -870,7 +939,7 @@ export default function AdminTables({ table }: Props) {
                                 onMouseEnter={(e) => e.currentTarget.style.background = "#7c3aed"}
                                 onMouseLeave={(e) => e.currentTarget.style.background = "#8b5cf6"}
                               >
-                                📧 Email
+                                📧 Email Reply
                               </button>
                             )}
                             <button
@@ -992,7 +1061,7 @@ export default function AdminTables({ table }: Props) {
                 value={editingRow[key]}
                 onChange={(value) => handleInputChange(key, value, false)}
                 isImage={isImage}
-                onImageUpload={(file) => {
+                onImageUpload={() => {
                   const input = document.createElement('input');
                   input.type = 'file';
                   input.accept = 'image/*';
@@ -1037,7 +1106,7 @@ export default function AdminTables({ table }: Props) {
                 value={newRecord[key]}
                 onChange={(value) => handleInputChange(key, value, true)}
                 isImage={isImage}
-                onImageUpload={(file) => {
+                onImageUpload={() => {
                   const input = document.createElement('input');
                   input.type = 'file';
                   input.accept = 'image/*';
