@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 16, 2026 at 10:01 AM
+-- Generation Time: Mar 20, 2026 at 01:09 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,40 @@ SET time_zone = "+00:00";
 --
 -- Database: `toptech_db`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appointments`
+--
+
+CREATE TABLE `appointments` (
+  `id` int(11) NOT NULL,
+  `full_name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(20) NOT NULL,
+  `appointment_date` date NOT NULL,
+  `appointment_time` time NOT NULL,
+  `message` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` varchar(20) DEFAULT 'pending',
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `appointments`
+--
+
+INSERT INTO `appointments` (`id`, `full_name`, `email`, `phone`, `appointment_date`, `appointment_time`, `message`, `created_at`, `status`, `updated_at`) VALUES
+(2, 'Ahmed Baba', 'ahmedmalik30600@gmail.com', '21212121211', '2026-03-21', '12:12:00', 'asdasasd', '2026-03-20 03:21:14', 'pending', '2026-03-20 03:21:14'),
+(3, 'Ahmed Baba', 'ahmedmalik30600@gmail.com', '21212121211', '2026-04-12', '00:12:00', 'sdasdasd', '2026-03-20 03:24:49', 'pending', '2026-03-20 03:24:49'),
+(4, 'Ahmed Baba', 'ahmedmalik30600@gmail.com', '21212121211', '2026-04-12', '00:12:00', 'afsdafd', '2026-03-20 03:28:10', 'pending', '2026-03-20 03:28:10'),
+(5, 'Ahmed Baba', 'ahmedmalik30600@gmail.com', '21212121211', '2026-04-12', '00:12:00', 'ggcvgh', '2026-03-20 03:31:55', 'pending', '2026-03-20 03:31:55'),
+(6, 'Ahmed Ba', 'xahmedmalik30@gmail.com', '32321313221', '2026-04-21', '02:34:00', 'gdfsfasas', '2026-03-20 04:57:15', 'pending', '2026-03-20 04:57:15'),
+(7, 'Ahmed Ba', 'xahmedmalik30@gmail.com', 'afsads', '2026-04-23', '02:34:00', 'fdsaf', '2026-03-20 05:00:29', 'pending', '2026-03-20 05:00:29'),
+(8, 'Ahmed Ba', 'xahmedmalik30@gmail.com', 'afsads', '2026-04-23', '02:34:00', 'fdsaf', '2026-03-20 10:03:22', 'pending', NULL),
+(9, 'sed', 'sed@gmail.com', '32423423423243', '2026-04-27', '03:21:00', 'asfas', '2026-03-20 10:04:51', 'pending', NULL),
+(10, 'ahad bhai', 'ahadbhai@gmail.com', '03333333333', '2026-04-23', '02:13:00', 'asdasdas', '2026-03-20 10:54:36', 'pending', NULL);
 
 -- --------------------------------------------------------
 
@@ -41,7 +75,7 @@ CREATE TABLE `banners` (
 --
 
 INSERT INTO `banners` (`id`, `text`, `is_active`, `order_number`, `created_at`, `updated_at`) VALUES
-(1, '✦ WORLD NO. 1 TECH SOLUTION COMPAtsdvgasNY ✦', 1, 1, '2026-03-10 10:05:00', '2026-03-10 10:05:00'),
+(1, '✦ WORLD NO. 1 TECH SOLUTION COMPANY ✦', 1, 1, '2026-03-10 10:05:00', '2026-03-20 11:34:03'),
 (2, '✦ 1000+ PROJECTS DELIVERED ✦', 1, 2, '2026-03-10 10:05:00', '2026-03-10 10:05:00'),
 (3, '✦ 500+ HAPPY CLIENTS ✦', 1, 3, '2026-03-10 10:05:00', '2026-03-10 10:05:00'),
 (4, '✦ 24/7 SUPPORT ✦', 1, 4, '2026-03-10 10:05:00', '2026-03-10 10:05:00'),
@@ -79,6 +113,13 @@ CREATE TABLE `cache` (
   `value` mediumtext NOT NULL,
   `expiration` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cache`
+--
+
+INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
+('laravel-cache-otp_xahmedmalik30600@gmail.com', 'i:578998;', 1773832977);
 
 -- --------------------------------------------------------
 
@@ -290,6 +331,21 @@ CREATE TABLE `pages` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `password_resets`
+--
+
+CREATE TABLE `password_resets` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `otp` varchar(6) NOT NULL,
+  `expiry` datetime NOT NULL,
+  `used` tinyint(4) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `plan_purchases`
 --
 
@@ -307,6 +363,14 @@ CREATE TABLE `plan_purchases` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `plan_purchases`
+--
+
+INSERT INTO `plan_purchases` (`id`, `plan_id`, `plan_name`, `price`, `period`, `customer_name`, `customer_email`, `customer_phone`, `message`, `status`, `created_at`, `updated_at`) VALUES
+(1, 2, 'Business', '$2,999', 'project', 'Ahmed', 'ahmedmalik30600@gmail.com', '03322751363', 'i love your work', 'pending', '2026-03-18 03:57:12', '2026-03-18 03:57:12'),
+(2, 1, 'Starter', '$999', 'project', 'sufiyan', 'xahmedmalik30@gmail.com', '03322751363', 'sadas', 'pending', '2026-03-18 04:50:06', '2026-03-18 04:50:06');
 
 -- --------------------------------------------------------
 
@@ -769,11 +833,17 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `avatar`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'admin@toptech.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', NULL, '2026-03-10 09:59:28', '2026-03-12 12:26:58');
+(1, 'Admin', 'xahmedmalik30600@gmail.com', '$2y$12$FTCCxmgrDSYAavVL7O81/eZCc/Hh8XWg8p3zwwKmTAXF0LdF8EO9W', 'admin', NULL, '2026-03-10 09:59:28', '2026-03-18 04:47:47');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `appointments`
+--
+ALTER TABLE `appointments`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `banners`
@@ -855,6 +925,13 @@ ALTER TABLE `newsletter_subscribers`
 ALTER TABLE `pages`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_user_reset` (`user_id`);
 
 --
 -- Indexes for table `plan_purchases`
@@ -958,6 +1035,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `appointments`
+--
+ALTER TABLE `appointments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
 -- AUTO_INCREMENT for table `banners`
 --
 ALTER TABLE `banners`
@@ -1024,10 +1107,16 @@ ALTER TABLE `pages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `password_resets`
+--
+ALTER TABLE `password_resets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `plan_purchases`
 --
 ALTER TABLE `plan_purchases`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `portfolio`

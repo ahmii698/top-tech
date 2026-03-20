@@ -327,7 +327,7 @@ export default function AdminLogin() {
             />
           </div>
 
-          <div style={{ marginBottom: "25px" }}>
+          <div style={{ marginBottom: "15px" }}>
             <label style={{
               display: "block",
               marginBottom: "8px",
@@ -364,6 +364,38 @@ export default function AdminLogin() {
               }}
               placeholder="••••••••"
             />
+          </div>
+
+          {/* 🔥 FORGOT PASSWORD BUTTON - YAHAN ADD KIYA HAI */}
+          <div style={{ 
+            textAlign: "right", 
+            marginBottom: "20px" 
+          }}>
+            <button
+              type="button"
+              onClick={() => navigate('/forgot')}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#4f46e5",
+                fontSize: "14px",
+                fontWeight: "500",
+                cursor: "pointer",
+                textDecoration: "underline",
+                padding: "5px",
+                transition: "color 0.3s"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "#6366f1";
+                e.currentTarget.style.textDecoration = "underline";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "#4f46e5";
+                e.currentTarget.style.textDecoration = "underline";
+              }}
+            >
+              Forgot Password?
+            </button>
           </div>
 
           <button

@@ -11,7 +11,7 @@ class PlanPurchaseController extends Controller
 {
     public function store(Request $request)
     {
-        // Validate
+        
         $request->validate([
             'plan_id' => 'required|integer',
             'plan_name' => 'required|string',
@@ -23,7 +23,6 @@ class PlanPurchaseController extends Controller
             'message' => 'nullable|string'
         ]);
 
-        // Save to database
         $id = DB::table('plan_purchases')->insertGetId([
             'plan_id' => $request->plan_id,
             'plan_name' => $request->plan_name,

@@ -2,64 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Portfolio;
+use App\Models\PlanPurchase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
-class PortfolioController extends Controller
+class PlanPurchaseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'plan_id' => 'required',
+            'plan_name' => 'required',
+            'price' => 'required',
+            'period' => 'required',
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'customer_phone' => 'required|string|max:20',
+            'message' => 'nullable|string',
+            'status' => 'required|in:pending,completed,cancelled'
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Portfolio $portfolio)
-    {
-        //
-    }
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Portfolio $portfolio)
-    {
-        //
-    }
+        try {
+            // Save to database
+            $purchase = PlanPurchase::create($request->all());
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Portfolio $portfolio)
-    {
-        //
-    }
+            return response()->json([
+                'success' => true,
+                'message' => 'Plan purchase request submitted successfully',
+                'data' => $purchase
+            ], 201);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Portfolio $portfolio)
-    {
-        //
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to submit request',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

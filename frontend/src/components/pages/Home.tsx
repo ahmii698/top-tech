@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import API from '../../services/api';  // 👈 '@' use kar, '../../services/api' nahi
+import API from '../../services/api';
 
 import { 
   ChevronLeft, ChevronRight, Star, MapPin, Phone, 
@@ -8,26 +8,48 @@ import {
   ShoppingCart, PenTool, Headphones, Globe, Palette, 
   Cpu, Rocket, Users, Clock, TrendingUp, Zap, Award,
   Coffee, Heart, Briefcase, Target, BarChart, Layers,
-  Play, Pause, Volume2, VolumeX, ExternalLink, Download
+  Play, Pause, Volume2, VolumeX, ExternalLink, Download, X,
+  Calendar, Clock as ClockIcon
 } from 'lucide-react';
 
 import Hero3D from '../common/HeroCube';
-
 import './Home.css';
 
 const Home = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [formStatus, setFormStatus] = useState('');
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   
-  // 👇 DYNAMIC DATA STATES - YEH SAB DELETE KAR DO PEHLE WALE STATIC DATA
+  // 👇 STATES FOR PLAN FORM
+  const [planFormData, setPlanFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+  const [planFormStatus, setPlanFormStatus] = useState('');
+  
+  // 👇👇👇 NEW: APPOINTMENT BOOKING FORM STATES
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [appointmentFormData, setAppointmentFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    date: '',
+    time: '',
+    message: ''
+  });
+  const [appointmentFormStatus, setAppointmentFormStatus] = useState('');
+  
+  // 👇 DYNAMIC DATA STATES
   const [services, setServices] = useState([]);
   const [team, setTeam] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
@@ -50,7 +72,7 @@ const Home = () => {
     awards: 0
   });
 
-  // Simulate page loading
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsPageLoading(false);
@@ -58,16 +80,8 @@ const Home = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll to top button visibility
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 500);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // 👇 REMOVED: scroll to top button handler completely
   
-  // ===== SCROLL ANIMATION =====
   useEffect(() => {
     const elements = document.querySelectorAll(
       ".services-section, .features-section, .stats-section, .process-section, .banner-section, .testimonials-section, .contact-section, .cta-section, .service-card, .feature-card, .stat-card, .process-card, .testimonial-card, .contact-form-container, .contact-info-card, .map-container, .section-header, .portfolio-item, .team-card, .pricing-card, .blog-card, .faq-item"
@@ -212,6 +226,125 @@ const Home = () => {
       setTimeout(() => setFormStatus(''), 3000);
     }
   };
+  
+  // Plan click handler
+  const handlePlanClick = (plan: any) => {
+    setSelectedPlan(plan);
+    setShowPlanModal(true);
+    setPlanFormData({ name: '', email: '', phone: '', message: '' });
+    setPlanFormStatus('');
+  };
+
+  // Modal close handler
+  const closeModal = () => {
+    setShowPlanModal(false);
+    setSelectedPlan(null);
+  };
+
+  // Handle plan form submit
+  const handlePlanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPlanFormStatus('sending');
+    
+    if (!planFormData.name || !planFormData.email || !planFormData.phone) {
+      alert('Please fill all required fields');
+      setPlanFormStatus('');
+      return;
+    }
+    
+    const purchaseData = {
+      plan_id: selectedPlan.id.toString(),
+      plan_name: selectedPlan.name,
+      price: selectedPlan.price,
+      period: selectedPlan.period,
+      customer_name: planFormData.name,
+      customer_email: planFormData.email,
+      customer_phone: planFormData.phone,
+      message: planFormData.message,
+      status: 'pending'
+    };
+    
+    try {
+      const response = await API.post('/plan-purchase', purchaseData);
+      
+      if (response.data.success) {
+        setPlanFormStatus('success');
+        alert('✅ Request submitted successfully! We will contact you soon.');
+        setPlanFormData({ name: '', email: '', phone: '', message: '' });
+        setTimeout(() => {
+          closeModal();
+          setPlanFormStatus('');
+        }, 1500);
+      } else {
+        throw new Error(response.data.message || 'Something went wrong');
+      }
+      
+    } catch (error: any) {
+      console.error('Error submitting plan:', error);
+      setPlanFormStatus('error');
+      alert('❌ Error: ' + (error.response?.data?.message || error.message || 'Failed to submit'));
+    }
+  };
+
+  // 👇👇👇 NEW: APPOINTMENT BOOKING HANDLERS
+  const handleAppointmentClick = () => {
+    setShowAppointmentModal(true);
+    setAppointmentFormData({
+      name: '',
+      email: '',
+      phone: '',
+      date: '',
+      time: '',
+      message: ''
+    });
+    setAppointmentFormStatus('');
+  };
+
+  const closeAppointmentModal = () => {
+    setShowAppointmentModal(false);
+  };
+const handleAppointmentSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setAppointmentFormStatus('sending');
+
+  if (!appointmentFormData.name || !appointmentFormData.email || !appointmentFormData.phone || !appointmentFormData.date || !appointmentFormData.time) {
+    alert('Please fill all required fields including date and time');
+    setAppointmentFormStatus('');
+    return;
+  }
+
+  const appointmentData = {
+    full_name: appointmentFormData.name,
+    email: appointmentFormData.email,
+    phone: appointmentFormData.phone,
+    appointment_date: appointmentFormData.date,
+    appointment_time: appointmentFormData.time,
+    message: appointmentFormData.message
+  };
+
+  try {
+    const response = await API.post('/appointments', appointmentData);
+
+    setAppointmentFormStatus('success');
+    alert('✅ Appointment booked successfully!');
+
+    // Reset form
+    setAppointmentFormData({
+      name: '',
+      email: '',
+      phone: '',
+      date: '',
+      time: '',
+      message: ''
+    });
+
+  } catch (error: any) {
+    console.error('Error booking appointment:', error);
+    setAppointmentFormStatus('error');
+    alert('❌ Error: ' + (error.response?.data?.message || error.message));
+  }
+};
+
 
   const toggleVideo = () => {
     if (videoRef.current) {
@@ -229,10 +362,6 @@ const Home = () => {
       videoRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
     }
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const filteredPortfolio = activeFilter === 'all' 
@@ -259,7 +388,7 @@ const Home = () => {
       case 'Zap': return <Zap size={size} />;
       case 'Users': return <Users size={size} />;
       case 'Rocket': return <Rocket size={size} />;
-      case 'Clock': return <Clock size={size} />;
+      case 'Clock': return <ClockIcon size={size} />;
       case 'Target': return <Target size={size} />;
       default: return <Code size={size} />;
     }
@@ -287,12 +416,41 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
-        <button className="scroll-top-btn" onClick={scrollToTop}>
-          <ArrowRight size={20} />
-        </button>
-      )}
+      {/* 👇👇👇 NEW: Floating Appointment Button (Modern Black) */}
+      <button
+        onClick={handleAppointmentClick}
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '16px',
+          background: 'linear-gradient(145deg, #1a1a1a, #2d2d2d)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 999,
+          transition: 'all 0.3s ease',
+          backdropFilter: 'blur(10px)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'linear-gradient(145deg, #2d2d2d, #1a1a1a)';
+          e.currentTarget.style.transform = 'scale(1.05) translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.4)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'linear-gradient(145deg, #1a1a1a, #2d2d2d)';
+          e.currentTarget.style.transform = 'scale(1) translateY(0)';
+          e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.3)';
+        }}
+        title="Book Appointment"
+      >
+        <Calendar size={26} color="#ffffff" />
+      </button>
 
       {/* Hero Section with 3D */}
       <section className="hero-section">
@@ -311,61 +469,58 @@ const Home = () => {
           </p>
           <div className="hero-buttons">
             <button className="btn-primary pulse-animation">Get Started</button>
-      
           </div>
         </div>
         
         <div className="hero-stats">
-         <div className="hero-stats">
-  <div className="hero-stat">
-    <div className="hero-stat-icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" stroke="#FFD700" strokeWidth="1.5"/>
-        <path d="M12 6V12L16 14" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    </div>
-    <span className="hero-stat-number">{counts.years}+</span>
-    <span className="hero-stat-label">Years Experience</span>
-  </div>
-  
-  <div className="hero-stat">
-    <div className="hero-stat-icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="9" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
-        <circle cx="15" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
-        <path d="M3 16C3 14 5 12 9 12C13 12 15 14 15 16M9 20C13 20 15 18 15 16" stroke="#FFD700" strokeWidth="1.5"/>
-      </svg>
-    </div>
-    <span className="hero-stat-number">{counts.clients}+</span>
-    <span className="hero-stat-label">Happy Clients</span>
-  </div>
-  
-  <div className="hero-stat">
-    <div className="hero-stat-icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="16" height="16" rx="2" stroke="#FFD700" strokeWidth="1.5"/>
-        <path d="M8 8H16M8 12H16M8 16H12" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    </div>
-    <span className="hero-stat-number">{counts.projects}+</span>
-    <span className="hero-stat-label">Projects Done</span>
-  </div>
-  
-  <div className="hero-stat">
-    <div className="hero-stat-icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
-        <path d="M5 20V19C5 15 8 13 12 13C16 13 19 15 19 19V20" stroke="#FFD700" strokeWidth="1.5"/>
-      </svg>
-    </div>
-    <span className="hero-stat-number">{counts.experts}+</span>
-    <span className="hero-stat-label">Expert Team</span>
-  </div>
-</div>
+          <div className="hero-stat">
+            <div className="hero-stat-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="#FFD700" strokeWidth="1.5"/>
+                <path d="M12 6V12L16 14" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <span className="hero-stat-number">{counts.years}+</span>
+            <span className="hero-stat-label">Years Experience</span>
+          </div>
+          
+          <div className="hero-stat">
+            <div className="hero-stat-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="9" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
+                <circle cx="15" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
+                <path d="M3 16C3 14 5 12 9 12C13 12 15 14 15 16M9 20C13 20 15 18 15 16" stroke="#FFD700" strokeWidth="1.5"/>
+              </svg>
+            </div>
+            <span className="hero-stat-number">{counts.clients}+</span>
+            <span className="hero-stat-label">Happy Clients</span>
+          </div>
+          
+          <div className="hero-stat">
+            <div className="hero-stat-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="4" width="16" height="16" rx="2" stroke="#FFD700" strokeWidth="1.5"/>
+                <path d="M8 8H16M8 12H16M8 16H12" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <span className="hero-stat-number">{counts.projects}+</span>
+            <span className="hero-stat-label">Projects Done</span>
+          </div>
+          
+          <div className="hero-stat">
+            <div className="hero-stat-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
+                <path d="M5 20V19C5 15 8 13 12 13C16 13 19 15 19 19V20" stroke="#FFD700" strokeWidth="1.5"/>
+              </svg>
+            </div>
+            <span className="hero-stat-number">{counts.experts}+</span>
+            <span className="hero-stat-label">Expert Team</span>
+          </div>
         </div>
       </section>
 
-      {/* Services Section - DYNAMIC */}
+      {/* Services Section */}
       <section className="services-section">
         <div className="container">
           <div className="section-header">
@@ -400,7 +555,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Portfolio Section - DYNAMIC */}
+      {/* Portfolio Section */}
       <section className="portfolio-section">
         <div className="container">
           <div className="section-header">
@@ -460,7 +615,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section - DYNAMIC */}
+      {/* Features Section */}
       <section className="features-section">
         <div className="container">
           <div className="section-header">
@@ -486,8 +641,8 @@ const Home = () => {
         </div>
       </section>
 
-      
-{/* Statistics Section - SLIDER with SVG Icons */}
+      {/* Statistics Section */}
+{/* Statistics Section */}
 <section className="stats-section" style={{ background: '#0A0A0A' }}>
   <div className="container">
     <div className="section-header">
@@ -501,51 +656,14 @@ const Home = () => {
           display: 'flex',
           animation: 'scrollStats 30s linear infinite'
         }}>
-          {/* Duplicate statistics for seamless loop */}
           {[...statistics, ...statistics].map((stat: any, index: number) => (
             <div key={`${stat.id}-${index}`} className="stat-slide">
               <div className="stat-card slider-stat-card">
                 <div className="stat-icon-wrapper">
-                  {stat.label.includes('Years') && (
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="#FFD700" strokeWidth="1.5"/>
-                      <path d="M12 6V12L16 14" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  )}
-                  {stat.label.includes('Clients') && (
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="9" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
-                      <circle cx="15" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
-                      <path d="M3 16C3 14 5 12 9 12C13 12 15 14 15 16M9 20C13 20 15 18 15 16" stroke="#FFD700" strokeWidth="1.5"/>
-                    </svg>
-                  )}
-                  {stat.label.includes('Projects') && (
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="4" y="4" width="16" height="16" rx="2" stroke="#FFD700" strokeWidth="1.5"/>
-                      <path d="M8 8H16M8 12H16M8 16H12" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  )}
-                  {stat.label.includes('Satisfaction') && (
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="#FFD700" strokeWidth="1.5"/>
-                      <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round"/>
-                      <circle cx="8" cy="9" r="1.5" fill="#FFD700"/>
-                      <circle cx="16" cy="9" r="1.5" fill="#FFD700"/>
-                    </svg>
-                  )}
-                  {stat.label.includes('Experts') && (
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="8" r="4" stroke="#FFD700" strokeWidth="1.5"/>
-                      <path d="M5 20V19C5 15 8 13 12 13C16 13 19 15 19 19V20" stroke="#FFD700" strokeWidth="1.5"/>
-                    </svg>
-                  )}
-                  {stat.label.includes('Awards') && (
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 15L8 21L12 18L16 21L12 15Z" stroke="#FFD700" strokeWidth="1.5"/>
-                      <circle cx="12" cy="8" r="5" stroke="#FFD700" strokeWidth="1.5"/>
-                      <path d="M12 5V8L14 9" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  )}
+                  {/* DIRECT EMOJI RENDER - NO FUNCTION NEEDED */}
+                  <span style={{ fontSize: '48px', display: 'inline-block' }}>
+                    {stat.icon}
+                  </span>
                 </div>
                 <h2>{stat.value}{stat.suffix}</h2>
                 <p>{stat.label}</p>
@@ -558,10 +676,7 @@ const Home = () => {
   </div>
 </section>
 
-
-
-
-      {/* Process Section - DYNAMIC */}
+      {/* Process Section */}
       <section className="process-section">
         <div className="container">
           <div className="section-header">
@@ -582,7 +697,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Team Section - DYNAMIC */}
+      {/* Team Section */}
       <section className="team-section">
         <div className="container">
           <div className="section-header">
@@ -612,55 +727,448 @@ const Home = () => {
           </div>
         </div>
       </section>
+      
+{/* Pricing Section */}
+<section className="pricing-section">
+  <div className="container">
+    <div className="section-header">
+      <span className="section-subtitle">Pricing</span>
+      <h2 className="section-title">Choose your <span className="golden-text">plan</span></h2>
+    </div>
 
-      {/* Pricing Section - DYNAMIC */}
-      <section className="pricing-section">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-subtitle">Pricing</span>
-            <h2 className="section-title">Flexible <span className="golden-text">Plans</span></h2>
+    <div className="pricing-grid">
+      {pricing.map((plan: any) => (
+        <div key={plan.id} className={`pricing-card ${plan.is_recommended ? 'recommended' : ''}`}>
+         
+          <h3>{plan.name}</h3>
+          <div className="pricing-price">
+            <span className="price">{plan.price}</span>
+            <span className="period">/{plan.period}</span>
           </div>
-
-          <div className="pricing-grid">
-            {pricing.map((plan: any) => (
-              <div key={plan.id} className={`pricing-card ${plan.is_recommended ? 'recommended' : ''}`}>
-                {plan.is_recommended && <div className="recommended-badge">Most Popular</div>}
-                <h3>{plan.name}</h3>
-                <div className="pricing-price">
-                  <span className="price">{plan.price}</span>
-                  <span className="period">/{plan.period}</span>
-                </div>
-                <ul className="pricing-features">
-                  {plan.features?.map((feature: any, idx: number) => (
-                    <li key={idx}>
-                      <Check size={16} /> {feature.feature || feature}
-                    </li>
-                  ))}
-                </ul>
-                <button className={`btn-${plan.is_recommended ? 'primary' : 'outline'} pricing-btn`}>
-                  {plan.button_text || 'Get Started'}
-                </button>
-              </div>
+          <ul className="pricing-features">
+            {plan.features?.map((feature: any, idx: number) => (
+              <li key={idx}>
+                <Check size={16} /> {feature.feature || feature}
+              </li>
             ))}
-          </div>
+          </ul>
+          <button 
+            className={`pricing-btn ${plan.is_recommended ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => handlePlanClick(plan)}
+          >
+            {plan.button_text || 'Select plan'}
+          </button>
         </div>
-      </section>
-
-  {/* Banner Section - FIXED */}
-<section className="banner-section">
-  <div className="scrolling-content">
-    {banners.map((banner: any) => (
-      <span key={banner.id} className="banner-item">{banner.text}</span>
-    ))}
-    {/* Duplicate for seamless loop */}
-    {banners.map((banner: any) => (
-      <span key={`dup-${banner.id}`} className="banner-item">{banner.text}</span>
-    ))}
+      ))}
+    </div>
   </div>
 </section>
 
+{/* Modal */}
+{showPlanModal && selectedPlan && (
+  <div className="modal-overlay" onClick={closeModal}>
+    <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <button className="modal-close" onClick={closeModal}>
+        <X size={20} />
+      </button>
+      
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3>Get started</h3>
+          <p className="modal-plan">{selectedPlan.name} plan</p>
+        </div>
+        
+        <form onSubmit={handlePlanSubmit}>
+          <div className="form-group">
+            <input 
+              type="text" 
+              placeholder="Full name"
+              value={planFormData.name} 
+              onChange={(e) => setPlanFormData({...planFormData, name: e.target.value})} 
+              required 
+            />
+          </div>
+          
+          <div className="form-group">
+            <input 
+              type="email" 
+              placeholder="Email address"
+              value={planFormData.email} 
+              onChange={(e) => setPlanFormData({...planFormData, email: e.target.value})} 
+              required 
+            />
+          </div>
+          
+          <div className="form-group">
+            <input 
+              type="tel" 
+              placeholder="Phone number"
+              value={planFormData.phone} 
+              onChange={(e) => setPlanFormData({...planFormData, phone: e.target.value})} 
+              required 
+            />
+          </div>
+          
+          <div className="form-group">
+            <textarea 
+              placeholder="Anything else?"
+              rows={3} 
+              value={planFormData.message} 
+              onChange={(e) => setPlanFormData({...planFormData, message: e.target.value})} 
+            />
+          </div>
+          
+          <button type="submit" disabled={planFormStatus === 'sending'} className="submit-btn">
+            {planFormStatus === 'sending' ? 'Processing...' : 'Continue'}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
 
-      {/* Testimonials Slider - DYNAMIC */}
+
+
+      
+
+      {/* 👇👇👇 NEW: APPOINTMENT BOOKING MODAL - Bottom right side */}
+      {showAppointmentModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'flex-end',
+          zIndex: 999999,
+        }} onClick={closeAppointmentModal}>
+          <div style={{
+            backgroundColor: '#1a1a1a',
+            padding: '28px',
+            borderRadius: '20px 20px 0 0',
+            width: '400px',
+            maxWidth: '100%',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.3)',
+            animation: 'slideUp 0.3s ease',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            margin: '0',
+            position: 'absolute',
+            bottom: '0',
+            right: '0'
+          }} onClick={(e) => e.stopPropagation()}>
+            
+            {/* Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '25px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              paddingBottom: '15px'
+            }}>
+              <h3 style={{
+                margin: 0,
+                fontSize: '20px',
+                fontWeight: '600',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <Calendar size={22} color="#ffffff" />
+                Book Appointment
+              </h3>
+              <button 
+                onClick={closeAppointmentModal}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  color: '#ffffff',
+                  padding: '8px',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Form */}
+            <form onSubmit={handleAppointmentSubmit}>
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={appointmentFormData.name}
+                  onChange={(e) => setAppointmentFormData({...appointmentFormData, name: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: '#ffffff',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                />
+              </div>
+              
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={appointmentFormData.email}
+                  onChange={(e) => setAppointmentFormData({...appointmentFormData, email: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: '#ffffff',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                />
+              </div>
+              
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={appointmentFormData.phone}
+                  onChange={(e) => setAppointmentFormData({...appointmentFormData, phone: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: '#ffffff',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                />
+              </div>
+              
+              {/* Date and Time Fields */}
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '18px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
+                    Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={appointmentFormData.date}
+                    onChange={(e) => setAppointmentFormData({...appointmentFormData, date: e.target.value})}
+                    required
+                    min={new Date().toISOString().split('T')[0]}
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      color: '#ffffff',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }}
+                  />
+                </div>
+                
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
+                    Time *
+                  </label>
+                  <input
+                    type="time"
+                    value={appointmentFormData.time}
+                    onChange={(e) => setAppointmentFormData({...appointmentFormData, time: e.target.value})}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      color: '#ffffff',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }}
+                  />
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: '25px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
+                  Message (Optional)
+                </label>
+                <textarea
+                  placeholder="What would you like to discuss?"
+                  rows={3}
+                  value={appointmentFormData.message}
+                  onChange={(e) => setAppointmentFormData({...appointmentFormData, message: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: '#ffffff',
+                    fontSize: '15px',
+                    resize: 'vertical',
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                  }}
+                />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={closeAppointmentModal}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    backgroundColor: 'transparent',
+                    color: '#fff',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={appointmentFormStatus === 'sending'}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    background: 'linear-gradient(145deg, #2d2d2d, #1a1a1a)',
+                    color: 'white',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '500',
+                    opacity: appointmentFormStatus === 'sending' ? 0.7 : 1,
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (appointmentFormStatus !== 'sending') {
+                      e.currentTarget.style.background = 'linear-gradient(145deg, #3d3d3d, #2a2a2a)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (appointmentFormStatus !== 'sending') {
+                      e.currentTarget.style.background = 'linear-gradient(145deg, #2d2d2d, #1a1a1a)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }
+                  }}
+                >
+                  {appointmentFormStatus === 'sending' ? 'Booking...' : 'Book Now'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* Testimonials Slider */}
       <section className="testimonials-section">
         <div className="container">
           <div className="section-header">
@@ -754,7 +1262,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* FAQ Section - DYNAMIC */}
+      {/* FAQ Section */}
       <section className="faq-section">
         <div className="container">
           <div className="section-header">
@@ -781,82 +1289,80 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Contact Section - DYNAMIC */}
+      {/* Contact Section */}
       <section className="contact-section">
-  <div className="container">
-    <div className="section-header">
-      <span className="section-subtitle">Get In Touch</span>
-      <h2 className="section-title">Let's <span className="golden-text">Connect</span></h2>
-    </div>
+        <div className="container">
+          <div className="section-header">
+            <span className="section-subtitle">Get In Touch</span>
+            <h2 className="section-title">Let's <span className="golden-text">Connect</span></h2>
+          </div>
 
-    <div className="contact-grid">
-      {/* LEFT SIDE - CONTACT FORM */}
-      <div className="contact-form-container">
-        <form onSubmit={handleSubmit} className="contact-form">
-          <div className="form-group">
-            <input
-              type="text"
-              placeholder="Your Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <input
-              type="email"
-              placeholder="Your Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <textarea
-              placeholder="Your Message"
-              rows={5}
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              required
-            />
-          </div>
-          <button 
-            type="submit" 
-            className="btn-primary submit-btn"
-            disabled={formStatus === 'sending'}
-          >
-            {formStatus === 'sending' ? (
-              <span className="sending-spinner"></span>
-            ) : formStatus === 'success' ? (
-              <><Check size={18} /> Message Sent!</>
-            ) : (
-              'Send Message'
-            )}
-          </button>
-        </form>
-      </div>
+          <div className="contact-grid">
+            {/* LEFT SIDE - CONTACT FORM */}
+            <div className="contact-form-container">
+              <form onSubmit={handleSubmit} className="contact-form">
+                <div className="form-group">
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <input
+                    type="email"
+                    placeholder="Your Email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <textarea
+                    placeholder="Your Message"
+                    rows={5}
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    required
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  className="btn-primary submit-btn"
+                  disabled={formStatus === 'sending'}
+                >
+                  {formStatus === 'sending' ? (
+                    <span className="sending-spinner"></span>
+                  ) : formStatus === 'success' ? (
+                    <><Check size={18} /> Message Sent!</>
+                  ) : (
+                    'Send Message'
+                  )}
+                </button>
+              </form>
+            </div>
 
-      {/* RIGHT SIDE - ONLY MAP (NO CONTACT INFO) */}
-      <div className="contact-info-container">
-        <div className="map-container">
-          <iframe
-            title="office-location"
-            src={companyInfo?.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.636256472517!2d-122.088654484685!3d37.422408979825!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba5b3c4c0f0d%3A0x8c3c5f5f5f5f5f5f!2sGoogleplex!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus"}
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-          />
+            {/* RIGHT SIDE - ONLY MAP */}
+            <div className="contact-info-container">
+              <div className="map-container">
+                <iframe
+                  title="office-location"
+                  src={companyInfo?.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.636256472517!2d-122.088654484685!3d37.422408979825!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba5b3c4c0f0d%3A0x8c3c5f5f5f5f5f5f!2sGoogleplex!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus"}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
+      </section>
 
-    
-
-      {/* Newsletter Section - DYNAMIC */}
+      {/* Newsletter Section */}
       <section className="newsletter-section">
         <div className="container">
           <div className="newsletter-content">
@@ -866,6 +1372,7 @@ const Home = () => {
               <input 
                 type="email" 
                 placeholder="Enter your email" 
+                value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
               />
               <button type="submit">
@@ -875,6 +1382,20 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Slide Up Animation */}
+      <style>{`
+        @keyframes slideUp {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 };

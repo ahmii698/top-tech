@@ -1,6 +1,6 @@
 // components/layouts/Layout.tsx
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom"; // ✅ Import this
+import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import Sidebar from "./Sidebar";
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const Layout = ({ children }: Props) => {
-  const location = useLocation(); // ✅ Get current path
+  const location = useLocation();
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : false;
@@ -23,8 +23,11 @@ const Layout = ({ children }: Props) => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 
-  // ✅ AGAR ADMIN PAGE HAI TO SIRF CHILDREN DIKHAO (LAYOUT MAT DIKHAO)
-  if (location.pathname.startsWith('/admin')) {
+  // ✅ UN PAGES KE LIYE JO LAYOUT NAHI CHAHIYE
+  const noLayoutPaths = ['/admin', '/admin-login', '/forgot'];
+  
+  // ✅ Check karo agar current path inme se koi hai to
+  if (noLayoutPaths.includes(location.pathname)) {
     return <>{children}</>;
   }
 
@@ -45,12 +48,12 @@ const Layout = ({ children }: Props) => {
 
       <div className="mainLayout">
         <main className="content">
-          {children}  {/* YAHI PE HOME, ABOUT, SERVICES RENDER HONGE */}
+          {children}
         </main>
       </div>
 
       <Footer darkMode={darkMode} />
-      <ScrollToTop />
+     
     </div>
   );
 };

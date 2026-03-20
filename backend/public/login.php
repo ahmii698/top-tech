@@ -33,14 +33,14 @@ $email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
 
 // ✅ TEMPORARY FIX - Direct check for testing
-if ($email === 'admin@toptech.com' && $password === 'password') {
+if ($email === 'xahmedmalik30600@gmail.com' && $password === 'password') {
     echo json_encode([
         'success' => true,
         'token' => 'token-' . time(),
         'user' => [
             'id' => 1,
             'name' => 'Admin',
-            'email' => 'admin@toptech.com',
+            'email' => 'xahmedmalik30600@gmail.com',
             'role' => 'admin'
         ]
     ]);

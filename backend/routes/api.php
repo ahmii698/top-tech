@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+
 /*
 |--------------------------------------------------------------------------
 | API Controllers
@@ -26,7 +28,44 @@ use App\Http\Controllers\Api\TechnologyController;
 use App\Http\Controllers\Api\AuthController;
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AppointmentController;
+use App\Http\Controllers\Admin\PlanPurchaseController;
+use App\Http\Controllers\PlanPurchaseController as FrontPlanPurchaseController;
+use App\Http\Controllers\Admin\EmailController;
 
+/*
+|--------------------------------------------------------------------------
+| 🔥 ADMIN EMAIL ROUTES
+|--------------------------------------------------------------------------
+*/
+
+// Generic email route
+Route::post('/send-email', [AdminController::class, 'sendEmail']);
+
+// NEW: Specific routes for appointments and plan orders
+Route::middleware('auth:sanctum')->group(function () {
+    // Appointments email route
+    Route::post('/admin/appointments/{id}/send-email', [EmailController::class, 'sendAppointmentEmail']);
+    
+    // Plan Orders email route  
+    Route::post('/admin/plan-orders/{id}/send-email', [EmailController::class, 'sendPlanOrderEmail']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| ✅ APPOINTMENT BOOKING ROUTE
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/appointments', [AppointmentController::class, 'store']);
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN EMAIL ACTION FOR APPOINTMENTS (Legacy - keep for compatibility)
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/admin/appointments/{id}/email', [AppointmentController::class, 'sendEmail']);
 
 /*
 |--------------------------------------------------------------------------
@@ -47,7 +86,6 @@ Route::get('/statistics', [StatisticController::class, 'index']);
 Route::get('/company-info', [CompanyInfoController::class, 'index']);
 Route::get('/settings', [SettingController::class, 'index']);
 
-
 /*
 |--------------------------------------------------------------------------
 | TECHNOLOGY ROUTES
@@ -66,9 +104,7 @@ Route::prefix('technologies')->group(function () {
     Route::delete('/{id}', [TechnologyController::class, 'destroy']);
 
     Route::patch('/{id}/toggle-status', [TechnologyController::class, 'toggleStatus']);
-
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -79,19 +115,17 @@ Route::prefix('technologies')->group(function () {
 Route::post('/contact', [ContactController::class, 'store']);
 Route::post('/newsletter', [NewsletterController::class, 'store']);
 
-
 /*
 |--------------------------------------------------------------------------
-| ADMIN LOGIN API
+| ADMIN LOGIN
 |--------------------------------------------------------------------------
 */
 
-// routes/api.php
 Route::post('/admin-login', [AuthController::class, 'login']);
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN PANEL GENERIC CRUD
+| 🚨 ADMIN GENERIC CRUD (HAMESHA NEECHAY RAKHO)
 |--------------------------------------------------------------------------
 */
 
@@ -105,21 +139,52 @@ Route::prefix('admin')->group(function () {
 
 });
 
-Route::post('/plan-purchase', [App\Http\Controllers\PlanPurchaseController::class, 'store']);
+/*
+|--------------------------------------------------------------------------
+| PLAN PURCHASE
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/plan-purchase', [FrontPlanPurchaseController::class, 'store']);
+
+/*
+|--------------------------------------------------------------------------
+| PRICING DATA
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/pricing-plans', function() {
     $plans = DB::table('pricing_plans')
                ->where('is_active', 1)
                ->orderBy('order_number')
                ->get();
+
     return response()->json(['data' => $plans]);
 });
 
 Route::get('/pricing-features', function() {
     $features = DB::table('pricing_features')->get();
+
     return response()->json(['data' => $features]);
 });
+
+/*
+|--------------------------------------------------------------------------
+| 🔐 ADMIN PLAN PURCHASES
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/admin/plan-purchases', [App\Http\Controllers\Admin\PlanPurchaseController::class, 'index']);
-    Route::put('/admin/plan-purchases/{id}', [App\Http\Controllers\Admin\PlanPurchaseController::class, 'update']);
-}); 
+    Route::get('/admin/plan-purchases', [PlanPurchaseController::class, 'index']);
+    Route::put('/admin/plan-purchases/{id}', [PlanPurchaseController::class, 'update']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| FORGOT PASSWORD
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/forgot-password', [App\Http\Controllers\ForgotPasswordController::class, 'sendOtp']);
+Route::post('/verify-otp', [App\Http\Controllers\ForgotPasswordController::class, 'verifyOtp']);
+Route::post('/reset-password', [App\Http\Controllers\ForgotPasswordController::class, 'resetPassword']);

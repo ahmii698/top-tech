@@ -7,25 +7,27 @@ import Services from "./components/pages/Services";
 import Contact from "./components/pages/contact";
 import Blog from "./components/pages/blog";
 import AdminPanel from "./components/admin/NewAdminPanel";
-import AdminLogin from "./components/admin/AdminLogin"; // ✅ Import karo
-import ProtectedRoute from "./components/ProtectedRoute"; // ✅ Import karo
+import AdminLogin from "./components/admin/AdminLogin";
+import ForgotPassword from "./components/admin/ForgotPassword"; // ✅ Import karo
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
 
 function App() {
   return (
     <Router>
-      <Layout> {/* ✅ Layout yahan hi rahay ga, home chalta rahay ga */}
+      <Layout>
         <Routes>
-          {/* WEBSITE ROUTES - YEH CHALTA RAHAY GA */}
+          {/* WEBSITE ROUTES */}
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/blog" element={<Blog />} />
 
-          {/* ADMIN LOGIN ROUTE - YEH LAYOUT K ANDAR HI CHALAY GA */}
+          {/* ✅ ADMIN AUTH ROUTES - GROUPED TOGETHER */}
           <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/forgot" element={<ForgotPassword />} /> {/* ✅ YAHAN ADD KIYA */}
 
           {/* ADMIN PANEL - PROTECTED ROUTE */}
           <Route
