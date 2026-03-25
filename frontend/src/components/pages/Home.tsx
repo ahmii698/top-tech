@@ -9,7 +9,8 @@ import {
   Cpu, Rocket, Users, Clock, TrendingUp, Zap, Award,
   Coffee, Heart, Briefcase, Target, BarChart, Layers,
   Play, Pause, Volume2, VolumeX, ExternalLink, Download, X,
-  Calendar, Clock as ClockIcon
+  Calendar, Clock as ClockIcon, Trophy, Award as AwardIcon, Briefcase as BriefcaseIcon, Users as UsersIcon,
+  Activity, PieChart, Layers as LayersIcon, Sparkles
 } from 'lucide-react';
 
 import Hero3D from '../common/HeroCube';
@@ -48,6 +49,11 @@ const Home = () => {
     message: ''
   });
   const [appointmentFormStatus, setAppointmentFormStatus] = useState('');
+  
+  // 👇 NEWSLETTER STATES
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState('');
+  const [newsletterErrorMsg, setNewsletterErrorMsg] = useState('');
   
   // 👇 DYNAMIC DATA STATES
   const [services, setServices] = useState([]);
@@ -227,6 +233,30 @@ const Home = () => {
     }
   };
   
+  // 👇 NEWSLETTER SUBMIT HANDLER
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNewsletterStatus('sending');
+    setNewsletterErrorMsg('');
+    
+    try {
+      const response = await API.post('/newsletter', { email: newsletterEmail });
+      
+      if (response.data.success) {
+        setNewsletterStatus('success');
+        setNewsletterEmail('');
+        setTimeout(() => setNewsletterStatus(''), 3000);
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error: any) {
+      console.error('Newsletter error:', error);
+      setNewsletterStatus('error');
+      setNewsletterErrorMsg(error.response?.data?.message || 'Email already subscribed or invalid');
+      setTimeout(() => setNewsletterStatus(''), 3000);
+    }
+  };
+  
   // Plan click handler
   const handlePlanClick = (plan: any) => {
     setSelectedPlan(plan);
@@ -286,6 +316,9 @@ const Home = () => {
     }
   };
 
+
+  
+
   // 👇👇👇 NEW: APPOINTMENT BOOKING HANDLERS
   const handleAppointmentClick = () => {
     setShowAppointmentModal(true);
@@ -303,47 +336,53 @@ const Home = () => {
   const closeAppointmentModal = () => {
     setShowAppointmentModal(false);
   };
-const handleAppointmentSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setAppointmentFormStatus('sending');
+  
+  const handleAppointmentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAppointmentFormStatus('sending');
 
-  if (!appointmentFormData.name || !appointmentFormData.email || !appointmentFormData.phone || !appointmentFormData.date || !appointmentFormData.time) {
-    alert('Please fill all required fields including date and time');
-    setAppointmentFormStatus('');
-    return;
-  }
+    if (!appointmentFormData.name || !appointmentFormData.email || !appointmentFormData.phone || !appointmentFormData.date || !appointmentFormData.time) {
+      alert('Please fill all required fields including date and time');
+      setAppointmentFormStatus('');
+      return;
+    }
 
-  const appointmentData = {
-    full_name: appointmentFormData.name,
-    email: appointmentFormData.email,
-    phone: appointmentFormData.phone,
-    appointment_date: appointmentFormData.date,
-    appointment_time: appointmentFormData.time,
-    message: appointmentFormData.message
+    const appointmentData = {
+      full_name: appointmentFormData.name,
+      email: appointmentFormData.email,
+      phone: appointmentFormData.phone,
+      appointment_date: appointmentFormData.date,
+      appointment_time: appointmentFormData.time,
+      message: appointmentFormData.message
+    };
+
+    try {
+      const response = await API.post('/appointments', appointmentData);
+
+      setAppointmentFormStatus('success');
+      alert('✅ Appointment booked successfully!');
+
+      // Reset form
+      setAppointmentFormData({
+        name: '',
+        email: '',
+        phone: '',
+        date: '',
+        time: '',
+        message: ''
+      });
+
+      // Close modal if open
+      if (showAppointmentModal) {
+        closeAppointmentModal();
+      }
+
+    } catch (error: any) {
+      console.error('Error booking appointment:', error);
+      setAppointmentFormStatus('error');
+      alert('❌ Error: ' + (error.response?.data?.message || error.message));
+    }
   };
-
-  try {
-    const response = await API.post('/appointments', appointmentData);
-
-    setAppointmentFormStatus('success');
-    alert('✅ Appointment booked successfully!');
-
-    // Reset form
-    setAppointmentFormData({
-      name: '',
-      email: '',
-      phone: '',
-      date: '',
-      time: '',
-      message: ''
-    });
-
-  } catch (error: any) {
-    console.error('Error booking appointment:', error);
-    setAppointmentFormStatus('error');
-    alert('❌ Error: ' + (error.response?.data?.message || error.message));
-  }
-};
 
 
   const toggleVideo = () => {
@@ -394,6 +433,22 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
     }
   };
 
+  // Helper function to render stat icons - Different icons for variety
+  const statIcons = [
+    <Trophy size={48} color="#FFD700" />,
+    <UsersIcon size={48} color="#FFD700" />,
+    <Rocket size={48} color="#FFD700" />,
+    <AwardIcon size={48} color="#FFD700" />,
+    <Target size={48} color="#FFD700" />,
+    <BarChart size={48} color="#FFD700" />,
+    <Sparkles size={48} color="#FFD700" />,
+    <Activity size={48} color="#FFD700" />
+  ];
+
+  const renderStatIcon = (index: number) => {
+    return statIcons[index % statIcons.length];
+  };
+
   // Loading Screen
   if (isPageLoading || loading) {
     return (
@@ -415,8 +470,8 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
   }
 
   return (
-    <div className="home-container">
-      {/* 👇👇👇 NEW: Floating Appointment Button (Modern Black) */}
+    <div className="home-container" style={{ overflowX: 'hidden' }}>
+      {/* Floating Appointment Button */}
       <button
         onClick={handleAppointmentClick}
         style={{
@@ -426,8 +481,8 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
           width: '56px',
           height: '56px',
           borderRadius: '16px',
-          background: 'linear-gradient(145deg, #1a1a1a, #2d2d2d)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'linear-gradient(145deg, #FFD700, #FFA500)',
+          border: 'none',
           boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)',
           cursor: 'pointer',
           display: 'flex',
@@ -435,21 +490,18 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
           justifyContent: 'center',
           zIndex: 999,
           transition: 'all 0.3s ease',
-          backdropFilter: 'blur(10px)'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(145deg, #2d2d2d, #1a1a1a)';
           e.currentTarget.style.transform = 'scale(1.05) translateY(-5px)';
-          e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.4)';
+          e.currentTarget.style.boxShadow = '0 12px 28px rgba(255, 215, 0, 0.4)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'linear-gradient(145deg, #1a1a1a, #2d2d2d)';
           e.currentTarget.style.transform = 'scale(1) translateY(0)';
           e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.3)';
         }}
         title="Book Appointment"
       >
-        <Calendar size={26} color="#ffffff" />
+        <Calendar size={26} color="#000000" />
       </button>
 
       {/* Hero Section with 3D */}
@@ -641,40 +693,36 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
         </div>
       </section>
 
-      {/* Statistics Section */}
-{/* Statistics Section */}
-<section className="stats-section" style={{ background: '#0A0A0A' }}>
-  <div className="container">
-    <div className="section-header">
-      <span className="section-subtitle">Our Achievements</span>
-      <h2 className="section-title">Company <span className="golden-text">Statistics</span></h2>
-    </div>
-    
-    <div className="statistics-slider-container">
-      <div className="statistics-slider">
-        <div className="slider-track" style={{ 
-          display: 'flex',
-          animation: 'scrollStats 30s linear infinite'
-        }}>
-          {[...statistics, ...statistics].map((stat: any, index: number) => (
-            <div key={`${stat.id}-${index}`} className="stat-slide">
-              <div className="stat-card slider-stat-card">
-                <div className="stat-icon-wrapper">
-                  {/* DIRECT EMOJI RENDER - NO FUNCTION NEEDED */}
-                  <span style={{ fontSize: '48px', display: 'inline-block' }}>
-                    {stat.icon}
-                  </span>
-                </div>
-                <h2>{stat.value}{stat.suffix}</h2>
-                <p>{stat.label}</p>
+      {/* Statistics Section with Unique Icons */}
+      <section className="stats-section" style={{ background: '#0A0A0A' }}>
+        <div className="container">
+          <div className="section-header">
+            <span className="section-subtitle">Our Achievements</span>
+            <h2 className="section-title">Company <span className="golden-text">Statistics</span></h2>
+          </div>
+          
+          <div className="statistics-slider-container">
+            <div className="statistics-slider">
+              <div className="slider-track" style={{ 
+                display: 'flex',
+                animation: 'scrollStats 30s linear infinite'
+              }}>
+                {[...statistics, ...statistics].map((stat: any, index: number) => (
+                  <div key={`${stat.id}-${index}`} className="stat-slide">
+                    <div className="stat-card slider-stat-card">
+                      <div className="stat-icon-wrapper" style={{ color: '#FFD700' }}>
+                        {renderStatIcon(index)}
+                      </div>
+                      <h2>{stat.value}{stat.suffix}</h2>
+                      <p>{stat.label}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* Process Section */}
       <section className="process-section">
@@ -728,110 +776,105 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
         </div>
       </section>
       
-{/* Pricing Section */}
-<section className="pricing-section">
-  <div className="container">
-    <div className="section-header">
-      <span className="section-subtitle">Pricing</span>
-      <h2 className="section-title">Choose your <span className="golden-text">plan</span></h2>
-    </div>
-
-    <div className="pricing-grid">
-      {pricing.map((plan: any) => (
-        <div key={plan.id} className={`pricing-card ${plan.is_recommended ? 'recommended' : ''}`}>
-         
-          <h3>{plan.name}</h3>
-          <div className="pricing-price">
-            <span className="price">{plan.price}</span>
-            <span className="period">/{plan.period}</span>
+      {/* Pricing Section */}
+      <section className="pricing-section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-subtitle">Pricing</span>
+            <h2 className="section-title">Choose your <span className="golden-text">plan</span></h2>
           </div>
-          <ul className="pricing-features">
-            {plan.features?.map((feature: any, idx: number) => (
-              <li key={idx}>
-                <Check size={16} /> {feature.feature || feature}
-              </li>
+
+          <div className="pricing-grid">
+            {pricing.map((plan: any) => (
+              <div key={plan.id} className={`pricing-card ${plan.is_recommended ? 'recommended' : ''}`}>
+                <h3>{plan.name}</h3>
+                <div className="pricing-price">
+                  <span className="price">{plan.price}</span>
+                  <span className="period">/{plan.period}</span>
+                </div>
+                <ul className="pricing-features">
+                  {plan.features?.map((feature: any, idx: number) => (
+                    <li key={idx}>
+                      <Check size={16} /> {feature.feature || feature}
+                    </li>
+                  ))}
+                </ul>
+                <button 
+                  className={`pricing-btn ${plan.is_recommended ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => handlePlanClick(plan)}
+                >
+                  {plan.button_text || 'Select plan'}
+                </button>
+              </div>
             ))}
-          </ul>
-          <button 
-            className={`pricing-btn ${plan.is_recommended ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => handlePlanClick(plan)}
-          >
-            {plan.button_text || 'Select plan'}
-          </button>
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+      </section>
 
-{/* Modal */}
-{showPlanModal && selectedPlan && (
-  <div className="modal-overlay" onClick={closeModal}>
-    <div className="modal" onClick={(e) => e.stopPropagation()}>
-      <button className="modal-close" onClick={closeModal}>
-        <X size={20} />
-      </button>
-      
-      <div className="modal-content">
-        <div className="modal-header">
-          <h3>Get started</h3>
-          <p className="modal-plan">{selectedPlan.name} plan</p>
+      {/* Modal */}
+      {showPlanModal && selectedPlan && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeModal}>
+              <X size={20} />
+            </button>
+            
+            <div className="modal-content">
+              <div className="modal-header">
+                <h3>Get started</h3>
+                <p className="modal-plan">{selectedPlan.name} plan</p>
+              </div>
+              
+              <form onSubmit={handlePlanSubmit}>
+                <div className="form-group">
+                  <input 
+                    type="text" 
+                    placeholder="Full name"
+                    value={planFormData.name} 
+                    onChange={(e) => setPlanFormData({...planFormData, name: e.target.value})} 
+                    required 
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <input 
+                    type="email" 
+                    placeholder="Email address"
+                    value={planFormData.email} 
+                    onChange={(e) => setPlanFormData({...planFormData, email: e.target.value})} 
+                    required 
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <input 
+                    type="tel" 
+                    placeholder="Phone number"
+                    value={planFormData.phone} 
+                    onChange={(e) => setPlanFormData({...planFormData, phone: e.target.value})} 
+                    required 
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <textarea 
+                    placeholder="Anything else?"
+                    rows={3} 
+                    value={planFormData.message} 
+                    onChange={(e) => setPlanFormData({...planFormData, message: e.target.value})} 
+                  />
+                </div>
+                
+                <button type="submit" disabled={planFormStatus === 'sending'} className="submit-btn">
+                  {planFormStatus === 'sending' ? 'Processing...' : 'Continue'}
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
-        
-        <form onSubmit={handlePlanSubmit}>
-          <div className="form-group">
-            <input 
-              type="text" 
-              placeholder="Full name"
-              value={planFormData.name} 
-              onChange={(e) => setPlanFormData({...planFormData, name: e.target.value})} 
-              required 
-            />
-          </div>
-          
-          <div className="form-group">
-            <input 
-              type="email" 
-              placeholder="Email address"
-              value={planFormData.email} 
-              onChange={(e) => setPlanFormData({...planFormData, email: e.target.value})} 
-              required 
-            />
-          </div>
-          
-          <div className="form-group">
-            <input 
-              type="tel" 
-              placeholder="Phone number"
-              value={planFormData.phone} 
-              onChange={(e) => setPlanFormData({...planFormData, phone: e.target.value})} 
-              required 
-            />
-          </div>
-          
-          <div className="form-group">
-            <textarea 
-              placeholder="Anything else?"
-              rows={3} 
-              value={planFormData.message} 
-              onChange={(e) => setPlanFormData({...planFormData, message: e.target.value})} 
-            />
-          </div>
-          
-          <button type="submit" disabled={planFormStatus === 'sending'} className="submit-btn">
-            {planFormStatus === 'sending' ? 'Processing...' : 'Continue'}
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
-
-
-      
-
-      {/* 👇👇👇 NEW: APPOINTMENT BOOKING MODAL - Bottom right side */}
+      {/* Appointment Booking Modal */}
       {showAppointmentModal && (
         <div style={{
           position: 'fixed',
@@ -839,48 +882,44 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
           display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'flex-end',
+          alignItems: 'center',
+          justifyContent: 'center',
           zIndex: 999999,
+          backdropFilter: 'blur(5px)'
         }} onClick={closeAppointmentModal}>
           <div style={{
             backgroundColor: '#1a1a1a',
-            padding: '28px',
-            borderRadius: '20px 20px 0 0',
-            width: '400px',
-            maxWidth: '100%',
-            maxHeight: '80vh',
+            padding: '32px',
+            borderRadius: '24px',
+            width: '500px',
+            maxWidth: '90%',
+            maxHeight: '85vh',
             overflowY: 'auto',
-            boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
             animation: 'slideUp 0.3s ease',
-            border: '1px solid rgba(255, 255, 255, 0.05)',
-            margin: '0',
-            position: 'absolute',
-            bottom: '0',
-            right: '0'
+            border: '1px solid rgba(255, 255, 255, 0.1)'
           }} onClick={(e) => e.stopPropagation()}>
             
-            {/* Header */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '25px',
+              marginBottom: '24px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-              paddingBottom: '15px'
+              paddingBottom: '16px'
             }}>
               <h3 style={{
                 margin: 0,
-                fontSize: '20px',
+                fontSize: '24px',
                 fontWeight: '600',
-                color: '#ffffff',
+                color: '#FFD700',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px'
               }}>
-                <Calendar size={22} color="#ffffff" />
+                <Calendar size={24} color="#FFD700" />
                 Book Appointment
               </h3>
               <button 
@@ -888,7 +927,7 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
                 style={{
                   background: 'rgba(255, 255, 255, 0.1)',
                   border: 'none',
-                  fontSize: '18px',
+                  fontSize: '20px',
                   cursor: 'pointer',
                   color: '#ffffff',
                   padding: '8px',
@@ -907,21 +946,20 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
               </button>
             </div>
             
-            {/* Form */}
             <form onSubmit={handleAppointmentSubmit}>
               <div style={{ marginBottom: '18px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Full Name *
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter your full name"
+                  placeholder="John Doe"
                   value={appointmentFormData.name}
                   onChange={(e) => setAppointmentFormData({...appointmentFormData, name: e.target.value})}
                   required
                   style={{
                     width: '100%',
-                    padding: '12px 14px',
+                    padding: '14px 16px',
                     borderRadius: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -931,8 +969,8 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
                     transition: 'all 0.2s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                    e.target.style.borderColor = '#FFD700';
+                    e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -942,18 +980,18 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
               </div>
               
               <div style={{ marginBottom: '18px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Email Address *
                 </label>
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="john@example.com"
                   value={appointmentFormData.email}
                   onChange={(e) => setAppointmentFormData({...appointmentFormData, email: e.target.value})}
                   required
                   style={{
                     width: '100%',
-                    padding: '12px 14px',
+                    padding: '14px 16px',
                     borderRadius: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -963,8 +1001,8 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
                     transition: 'all 0.2s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                    e.target.style.borderColor = '#FFD700';
+                    e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -973,43 +1011,43 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
                 />
               </div>
               
-              <div style={{ marginBottom: '18px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  value={appointmentFormData.phone}
-                  onChange={(e) => setAppointmentFormData({...appointmentFormData, phone: e.target.value})}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    color: '#ffffff',
-                    fontSize: '15px',
-                    outline: 'none',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                  }}
-                />
-              </div>
-              
-              {/* Date and Time Fields */}
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '18px' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
-                    Date *
+              {/* Row 2: Phone Number & Date - 2 columns */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+92 300 1234567"
+                    value={appointmentFormData.phone}
+                    onChange={(e) => setAppointmentFormData({...appointmentFormData, phone: e.target.value})}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      color: '#ffffff',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#FFD700';
+                      e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Preferred Date *
                   </label>
                   <input
                     type="date"
@@ -1019,7 +1057,7 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
                     min={new Date().toISOString().split('T')[0]}
                     style={{
                       width: '100%',
-                      padding: '12px 14px',
+                      padding: '14px 16px',
                       borderRadius: '12px',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
                       backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -1029,39 +1067,8 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
                       transition: 'all 0.2s ease'
                     }}
                     onFocus={(e) => {
-                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                    }}
-                  />
-                </div>
-                
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
-                    Time *
-                  </label>
-                  <input
-                    type="time"
-                    value={appointmentFormData.time}
-                    onChange={(e) => setAppointmentFormData({...appointmentFormData, time: e.target.value})}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      color: '#ffffff',
-                      fontSize: '14px',
-                      outline: 'none',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                      e.target.style.borderColor = '#FFD700';
+                      e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
                     }}
                     onBlur={(e) => {
                       e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -1071,30 +1078,30 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
                 </div>
               </div>
               
-              <div style={{ marginBottom: '25px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: '500', color: '#aaa' }}>
-                  Message (Optional)
+              {/* Row 3: Time - Full width */}
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Preferred Time *
                 </label>
-                <textarea
-                  placeholder="What would you like to discuss?"
-                  rows={3}
-                  value={appointmentFormData.message}
-                  onChange={(e) => setAppointmentFormData({...appointmentFormData, message: e.target.value})}
+                <input
+                  type="time"
+                  value={appointmentFormData.time}
+                  onChange={(e) => setAppointmentFormData({...appointmentFormData, time: e.target.value})}
+                  required
                   style={{
                     width: '100%',
-                    padding: '12px 14px',
+                    padding: '14px 16px',
                     borderRadius: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
                     color: '#ffffff',
-                    fontSize: '15px',
-                    resize: 'vertical',
+                    fontSize: '14px',
                     outline: 'none',
                     transition: 'all 0.2s ease'
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                    e.target.style.borderColor = '#FFD700';
+                    e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -1103,70 +1110,83 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
                 />
               </div>
               
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={closeAppointmentModal}
+              {/* Row 4: Message */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Message (Optional)
+                </label>
+                <textarea
+                  placeholder="Tell us what you'd like to discuss..."
+                  rows={3}
+                  value={appointmentFormData.message}
+                  onChange={(e) => setAppointmentFormData({...appointmentFormData, message: e.target.value})}
                   style={{
-                    flex: 1,
-                    padding: '14px',
-                    backgroundColor: 'transparent',
-                    color: '#fff',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    width: '100%',
+                    padding: '14px 16px',
                     borderRadius: '12px',
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={appointmentFormStatus === 'sending'}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    background: 'linear-gradient(145deg, #2d2d2d, #1a1a1a)',
-                    color: 'white',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: '#ffffff',
                     fontSize: '15px',
-                    fontWeight: '500',
-                    opacity: appointmentFormStatus === 'sending' ? 0.7 : 1,
-                    transition: 'all 0.2s ease'
+                    resize: 'vertical',
+                    outline: 'none',
+                    transition: 'all 0.2s ease',
+                    fontFamily: 'inherit'
                   }}
-                  onMouseEnter={(e) => {
-                    if (appointmentFormStatus !== 'sending') {
-                      e.currentTarget.style.background = 'linear-gradient(145deg, #3d3d3d, #2a2a2a)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                    }
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#FFD700';
+                    e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
                   }}
-                  onMouseLeave={(e) => {
-                    if (appointmentFormStatus !== 'sending') {
-                      e.currentTarget.style.background = 'linear-gradient(145deg, #2d2d2d, #1a1a1a)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
                   }}
-                >
-                  {appointmentFormStatus === 'sending' ? 'Booking...' : 'Book Now'}
-                </button>
+                />
               </div>
+              
+              <button
+                type="submit"
+                disabled={appointmentFormStatus === 'sending'}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                  color: '#000000',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  opacity: appointmentFormStatus === 'sending' ? 0.7 : 1,
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px'
+                }}
+                onMouseEnter={(e) => {
+                  if (appointmentFormStatus !== 'sending') {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(255, 215, 0, 0.3)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (appointmentFormStatus !== 'sending') {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }
+                }}
+              >
+                {appointmentFormStatus === 'sending' ? (
+                  <>⏳ Booking...</>
+                ) : (
+                  <>📅 Book Appointment <ArrowRight size={18} /></>
+                )}
+              </button>
             </form>
           </div>
         </div>
       )}
-
 
       {/* Testimonials Slider */}
       <section className="testimonials-section">
@@ -1289,74 +1309,331 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section className="contact-section">
+      {/* Contact Section with Map + Modern Booking Form */}
+      <section className="contact-section" style={{ padding: '80px 0', background: '#0a0a0a' }}>
         <div className="container">
           <div className="section-header">
             <span className="section-subtitle">Get In Touch</span>
-            <h2 className="section-title">Let's <span className="golden-text">Connect</span></h2>
+            <h2 className="section-title">Book Your <span className="golden-text">Appointment</span></h2>
+            <p className="section-description">
+              Schedule a consultation with our experts. We're here to help you grow your business.
+            </p>
           </div>
 
-          <div className="contact-grid">
-            {/* LEFT SIDE - CONTACT FORM */}
-            <div className="contact-form-container">
-              <form onSubmit={handleSubmit} className="contact-form">
-                <div className="form-group">
-                  <input
-                    type="text"
-                    placeholder="Your Name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gap: '40px',
+            alignItems: 'stretch'
+          }}>
+            {/* LEFT SIDE - MAP */}
+            <div className="map-container" style={{ 
+              width: '100%', 
+              height: '100%', 
+              minHeight: '550px',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
+            }}>
+              <iframe
+                title="office-location"
+                src={companyInfo?.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.636256472517!2d-122.088654484685!3d37.422408979825!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba5b3c4c0f0d%3A0x8c3c5f5f5f5f5f5f!2sGoogleplex!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus"}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+
+            {/* RIGHT SIDE - MODERN BOOKING FORM */}
+            <div style={{
+              background: 'linear-gradient(145deg, #1a1a1a, #0f0f0f)',
+              borderRadius: '24px',
+              padding: '32px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center'
+            }}>
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: '600',
+                marginBottom: '8px',
+                color: '#ffffff'
+              }}>
+                Schedule a Meeting
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: '#aaa',
+                marginBottom: '28px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                paddingBottom: '16px'
+              }}>
+                Fill out the form and our team will contact you within 24 hours.
+              </p>
+
+              <form onSubmit={handleAppointmentSubmit}>
+                {/* Row 1: Full Name & Email */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="John Doe"
+                      value={appointmentFormData.name}
+                      onChange={(e) => setAppointmentFormData({...appointmentFormData, name: e.target.value})}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#FFD700';
+                        e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                      }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="john@example.com"
+                      value={appointmentFormData.email}
+                      onChange={(e) => setAppointmentFormData({...appointmentFormData, email: e.target.value})}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#FFD700';
+                        e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <input
-                    type="email"
-                    placeholder="Your Email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                  />
+
+                
+{/* Row 2: Date & Time - Ek line main */}
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+  <div>
+    <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      Preferred Date *
+    </label>
+    <input
+      type="date"
+      value={appointmentFormData.date}
+      onChange={(e) => setAppointmentFormData({...appointmentFormData, date: e.target.value})}
+      required
+      min={new Date().toISOString().split('T')[0]}
+      style={{
+        width: '100%',
+        padding: '12px 16px',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        color: '#ffffff',
+        fontSize: '14px',
+        outline: 'none',
+        transition: 'all 0.2s ease'
+      }}
+      onFocus={(e) => {
+        e.target.style.borderColor = '#FFD700';
+        e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
+      }}
+      onBlur={(e) => {
+        e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+      }}
+    />
+  </div>
+
+  <div>
+    <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      Preferred Time *
+    </label>
+    <input
+      type="time"
+      value={appointmentFormData.time}
+      onChange={(e) => setAppointmentFormData({...appointmentFormData, time: e.target.value})}
+      required
+      style={{
+        width: '100%',
+        padding: '12px 16px',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        color: '#ffffff',
+        fontSize: '14px',
+        outline: 'none',
+        transition: 'all 0.2s ease'
+      }}
+      onFocus={(e) => {
+        e.target.style.borderColor = '#FFD700';
+        e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
+      }}
+      onBlur={(e) => {
+        e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+      }}
+    />
+  </div>
+</div>
+
+
+
+
+
+
+                   {/* Row 3: phone no  - Full width */}
+                <div style={{ marginBottom: '20px' }}>
+                   <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="+92 300 1234567"
+                      value={appointmentFormData.phone}
+                      onChange={(e) => setAppointmentFormData({...appointmentFormData, phone: e.target.value})}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        outline: 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#FFD700';
+                        e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                        e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="form-group">
+
+
+
+
+
+
+
+
+
+                
+                {/* Row 4: Message - Full width */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', fontWeight: '500', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Message (Optional)
+                  </label>
                   <textarea
-                    placeholder="Your Message"
-                    rows={5}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    required
+                    placeholder="Tell us what you'd like to discuss..."
+                    rows={3}
+                    value={appointmentFormData.message}
+                    onChange={(e) => setAppointmentFormData({...appointmentFormData, message: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      color: '#ffffff',
+                      fontSize: '14px',
+                      resize: 'vertical',
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                      fontFamily: 'inherit'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#FFD700';
+                      e.target.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }}
                   />
                 </div>
-                <button 
-                  type="submit" 
-                  className="btn-primary submit-btn"
-                  disabled={formStatus === 'sending'}
+                
+                <button
+                  type="submit"
+                  disabled={appointmentFormStatus === 'sending'}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                    color: '#000000',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    opacity: appointmentFormStatus === 'sending' ? 0.7 : 1,
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (appointmentFormStatus !== 'sending') {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.3)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (appointmentFormStatus !== 'sending') {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
                 >
-                  {formStatus === 'sending' ? (
-                    <span className="sending-spinner"></span>
-                  ) : formStatus === 'success' ? (
-                    <><Check size={18} /> Message Sent!</>
+                  {appointmentFormStatus === 'sending' ? (
+                    <>⏳ Booking...</>
                   ) : (
-                    'Send Message'
+                    <>📅 Book Appointment <ArrowRight size={16} /></>
                   )}
                 </button>
               </form>
-            </div>
-
-            {/* RIGHT SIDE - ONLY MAP */}
-            <div className="contact-info-container">
-              <div className="map-container">
-                <iframe
-                  title="office-location"
-                  src={companyInfo?.map_embed_url || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.636256472517!2d-122.088654484685!3d37.422408979825!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba5b3c4c0f0d%3A0x8c3c5f5f5f5f5f5f!2sGoogleplex!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus"}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                />
-              </div>
             </div>
           </div>
         </div>
@@ -1368,17 +1645,20 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
           <div className="newsletter-content">
             <h3>Subscribe to Our Newsletter</h3>
             <p>Get the latest tech insights and updates directly in your inbox</p>
-            <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
+            <form className="newsletter-form" onSubmit={handleNewsletterSubmit}>
               <input 
                 type="email" 
                 placeholder="Enter your email" 
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                required
               />
-              <button type="submit">
-                Subscribe <Send size={16} />
+              <button type="submit" disabled={newsletterStatus === 'sending'}>
+                {newsletterStatus === 'sending' ? 'Subscribing...' : 'Subscribe'} <Send size={16} />
               </button>
             </form>
+            {newsletterStatus === 'success' && <p style={{color: '#4ade80', marginTop: '10px', fontSize: '14px'}}>✅ Subscribed successfully!</p>}
+            {newsletterStatus === 'error' && <p style={{color: '#f87171', marginTop: '10px', fontSize: '14px'}}>❌ {newsletterErrorMsg}</p>}
           </div>
         </div>
       </section>
@@ -1394,6 +1674,10 @@ const handleAppointmentSubmit = async (e: React.FormEvent) => {
             transform: translateY(0);
             opacity: 1;
           }
+        }
+        @keyframes scrollStats {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
       `}</style>
     </div>

@@ -3,27 +3,24 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
-class NewsletterController extends Controller
+class ContactController extends Controller
 {
     public function store(Request $request)
     {
         try {
-            $validated = $request->validate([
-                'email' => 'required|email|unique:newsletter_subscribers,email'
-            ]);
-
-            DB::table('newsletter_subscribers')->insert([
+            $contact = Contact::create([
+                'name' => $request->name,
                 'email' => $request->email,
-                'is_active' => 1,
-                'subscribed_at' => now()
+                'message' => $request->message
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Subscribed successfully!'
+                'message' => 'Message sent!',
+                'data' => $contact
             ]);
 
         } catch (\Exception $e) {

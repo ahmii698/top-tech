@@ -1,34 +1,42 @@
-// src/components/admin/NewAdminPanel.tsx
+ // src/components/admin/NewAdminPanel.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { 
+  FiImage, FiBookOpen, FiHome, FiMail, FiMessageSquare, FiHelpCircle, 
+  FiStar, FiImage as FiHeroImage, FiMail as FiNewsletter, FiFileText, 
+  FiBriefcase, FiTool, FiDollarSign, FiPieChart, FiSettings, 
+  FiCreditCard, FiCalendar, FiTool as FiServices, FiZap,
+  FiBarChart2, FiUsers, FiCpu, FiMessageCircle, FiUser,
+  FiRefreshCw, FiTrash2, FiEdit2, FiPlus, FiSearch, FiLogOut,
+  FiSend, FiX, FiChevronLeft, FiChevronRight
+} from 'react-icons/fi';
 
 // ==================== ALL DATABASE TABLES ====================
 const TABLES = [
-  { name: "banners", icon: "🎯", label: "Banners" },
-  { name: "blog_posts", icon: "📝", label: "Blog Posts" },
-  { name: "company_info", icon: "🏢", label: "Company Info" },
-  { name: "contact_messages", icon: "✉️", label: "Contact Messages" },
-  { name: "cta_section", icon: "📢", label: "CTA Section" },
-  { name: "faqs", icon: "❓", label: "FAQs" },
-  { name: "features", icon: "⭐", label: "Features" },
-  { name: "hero_section", icon: "🖼️", label: "Hero Section" },
-  { name: "newsletter_subscribers", icon: "📧", label: "Newsletter" },
-  { name: "pages", icon: "📄", label: "Pages" },
-  { name: "portfolio", icon: "💼", label: "Portfolio" },
-  { name: "portfolio_technologies", icon: "🔧", label: "Portfolio Tech" },
-  { name: "pricing_features", icon: "💰", label: "Pricing Features" },
-  { name: "pricing_plans", icon: "💎", label: "Pricing Plans" },
-  { name: "process_steps", icon: "⚙️", label: "Process Steps" },
-  { name: "plan_purchases", icon: "💳", label: "Plan Purchases" },
-  { name: "appointments", icon: "📅", label: "Appointments" },
-  { name: "services", icon: "🛠️", label: "Services" },
-  { name: "service_features", icon: "✨", label: "Service Features" },
-  { name: "site_settings", icon: "⚙️", label: "Site Settings" },
-  { name: "statistics", icon: "📊", label: "Statistics" },
-  { name: "team_members", icon: "👥", label: "Team Members" },
-  { name: "technologies", icon: "💻", label: "Technologies" },
-  { name: "testimonials", icon: "💬", label: "Testimonials" },
-  { name: "users", icon: "👤", label: "Users" }
+    { name: "banners", icon: <FiImage size={18} />, label: "Banners" },
+  { name: "blog_posts", icon: <FiBookOpen size={18} />, label: "Blog Posts" },
+  { name: "company_info", icon: <FiHome size={18} />, label: "Company Info" },
+  { name: "contact_messages", icon: <FiMail size={18} />, label: "Contact Messages" },
+  { name: "cta_section", icon: <FiMessageSquare size={18} />, label: "CTA Section" },
+  { name: "faqs", icon: <FiHelpCircle size={18} />, label: "FAQs" },
+  { name: "features", icon: <FiStar size={18} />, label: "Features" },
+   { name: "hero_section", icon: <FiHeroImage size={18} />, label: "Hero Section" },
+  { name: "newsletter_subscribers", icon: <FiNewsletter size={18} />, label: "Newsletter" },
+  { name: "pages", icon: <FiFileText size={18} />, label: "Pages" },
+  { name: "portfolio", icon: <FiBriefcase size={18} />, label: "Portfolio" },
+  { name: "portfolio_technologies", icon: <FiTool size={18} />, label: "Portfolio Tech" },
+  { name: "pricing_features", icon: <FiDollarSign size={18} />, label: "Pricing Features" },
+  { name: "pricing_plans", icon: <FiPieChart size={18} />, label: "Pricing Plans" },
+  { name: "process_steps", icon: <FiSettings size={18} />, label: "Process Steps" },
+  { name: "plan_purchases", icon: <FiCreditCard size={18} />, label: "Plan Purchases" },
+  { name: "appointments", icon: <FiCalendar size={18} />, label: "Appointments" },
+  { name: "services", icon: <FiServices size={18} />, label: "Services" },
+  { name: "service_features", icon: <FiZap size={18} />, label: "Service Features" },
+  { name: "statistics", icon: <FiBarChart2 size={18} />, label: "Statistics" },
+  { name: "team_members", icon: <FiUsers size={18} />, label: "Team Members" },
+  { name: "technologies", icon: <FiCpu size={18} />, label: "Technologies" },
+  { name: "testimonials", icon: <FiMessageCircle size={18} />, label: "Testimonials" },
+  { name: "users", icon: <FiUser size={18} />, label: "Users" }
 ];
 
 // ==================== MAIN ADMIN PANEL ====================

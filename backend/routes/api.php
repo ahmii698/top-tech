@@ -40,7 +40,7 @@ use App\Http\Controllers\Admin\EmailController;
 */
 
 // Generic email route
-Route::post('/send-email', [AdminController::class, 'sendEmail']);
+//Route::post('/send-email', [AdminController::class, 'sendEmail']);
 
 // NEW: Specific routes for appointments and plan orders
 Route::middleware('auth:sanctum')->group(function () {
@@ -188,3 +188,11 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/forgot-password', [App\Http\Controllers\ForgotPasswordController::class, 'sendOtp']);
 Route::post('/verify-otp', [App\Http\Controllers\ForgotPasswordController::class, 'verifyOtp']);
 Route::post('/reset-password', [App\Http\Controllers\ForgotPasswordController::class, 'resetPassword']);
+
+/*
+|--------------------------------------------------------------------------
+| 📧 SEND EMAIL ROUTE (No auth required for testing)
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/send-email', [App\Http\Controllers\Admin\EmailController::class, 'sendEmail']);

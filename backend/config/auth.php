@@ -40,6 +40,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        
+        // 🔥 YEH ADD KIYA HAI - Sanctum Guard
+        'api' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
+        
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
     ],
 
     /*

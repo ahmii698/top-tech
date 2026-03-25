@@ -1,4 +1,4 @@
-// src/components/admin/AdminTables.tsx
+// src/components/admin/AdminTables.tsx (Updated)
 import { useEffect, useState } from "react";
 
 interface Props {
@@ -23,18 +23,18 @@ export default function AdminTables({ table }: Props) {
   const rowsPerPage = 10;
   const [uploadingImage, setUploadingImage] = useState<{field: string, isNew: boolean} | null>(null);
 
-  // Email Modal States - Works for both Appointments and Plan Purchases
+  // Email Modal States
   const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
   const [selectedEmailRecord, setSelectedEmailRecord] = useState<Record | null>(null);
   const [emailData, setEmailData] = useState({
     subject: '',
-    response_message: '',
+    message: '',
     status: ''
   });
   const [sendingEmail, setSendingEmail] = useState<boolean>(false);
 
   // ✅ API URL
-  const API_URL = 'http://localhost/MY-FULLSTACK-PROJECT/backend/public/api';
+  const API_URL = 'http://localhost:8000/api'; // Same as NewAdminPanel
   const getToken = () => localStorage.getItem('adminToken');
 
   const loadData = async (): Promise<void> => {
@@ -42,15 +42,15 @@ export default function AdminTables({ table }: Props) {
     
     try {
       const token = getToken();
-      const response = await fetch(`${API_URL}/${table}.php`, {
+      const response = await fetch(`${API_URL}/admin/${table}`, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
       
-      const res = await response.json();
-      setData(res.data || []);
+      const result = await response.json();
+      setData(result.data || result || []);
     } catch (error: any) {
       showNotification("Failed to load data!", "error");
     } finally {
@@ -126,7 +126,7 @@ export default function AdminTables({ table }: Props) {
     
     try {
       const token = getToken();
-      await fetch(`${API_URL}/${table}.php?id=${id}`, {
+      await fetch(`${API_URL}/admin/${table}/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -143,7 +143,7 @@ export default function AdminTables({ table }: Props) {
     
     try {
       const token = getToken();
-      await fetch(`${API_URL}/${table}.php?id=${editingRow.id}`, {
+      await fetch(`${API_URL}/admin/${table}/${editingRow.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -163,7 +163,7 @@ export default function AdminTables({ table }: Props) {
   const handleCreate = async (): Promise<void> => {
     try {
       const token = getToken();
-      await fetch(`${API_URL}/${table}.php`, {
+      await fetch(`${API_URL}/admin/${table}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -195,7 +195,7 @@ export default function AdminTables({ table }: Props) {
     }
   };
 
-  // Email Send Function - Works for both Appointments and Plan Purchases
+  // ✅ FIXED: Email Send Function - Same as NewAdminPanel
   const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEmailRecord) return;
@@ -203,44 +203,59 @@ export default function AdminTables({ table }: Props) {
     setSendingEmail(true);
     
     try {
-      const token = getToken();
+      // Get customer email and name
+      const customerEmail = selectedEmailRecord.email || selectedEmailRecord.customer_email;
+      const customerName = selectedEmailRecord.full_name || selectedEmailRecord.name || selectedEmailRecord.customer_name || 'Customer';
       
-      // Dynamic endpoint based on table type
-      let endpoint = '';
-      if (table === 'appointments') {
-        endpoint = `${API_URL}/admin/appointments/${selectedEmailRecord.id}/send-email`;
-      } else if (table === 'plan_purchases') {
-        endpoint = `${API_URL}/admin/plan-purchases/${selectedEmailRecord.id}/send-email`;
-      } else {
-        endpoint = `${API_URL}/admin/${table}/${selectedEmailRecord.id}/send-email`;
-      }
+      // Prepare email data matching NewAdminPanel format
+      const emailPayload = {
+        name: customerName,
+        email: customerEmail,
+        message: emailData.message,
+        subject: emailData.subject
+      };
       
-      const response = await fetch(endpoint, {
+      console.log('Sending email:', emailPayload);
+      
+      const response = await fetch(`${API_URL}/send-email`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(emailData)
+        body: JSON.stringify(emailPayload)
       });
       
       const result = await response.json();
+      console.log('Email response:', result);
       
       if (result.success) {
-        const customerEmail = selectedEmailRecord.email || selectedEmailRecord.customer_email;
         showNotification(`✅ Email sent successfully to ${customerEmail}`, "success");
         
         // Update status if changed
         if (emailData.status && emailData.status !== selectedEmailRecord.status) {
-          await loadData();
+          // Update status in database
+          try {
+            const token = getToken();
+            await fetch(`${API_URL}/admin/${table}/${selectedEmailRecord.id}`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ ...selectedEmailRecord, status: emailData.status })
+            });
+            await loadData();
+          } catch (error) {
+            console.error('Status update failed:', error);
+          }
         }
         
         // Close modal and reset form
         setShowEmailModal(false);
         setSelectedEmailRecord(null);
-        setEmailData({ subject: '', response_message: '', status: '' });
+        setEmailData({ subject: '', message: '', status: '' });
       } else {
-        showNotification(`❌ Failed: ${result.message}`, "error");
+        showNotification(`❌ Failed: ${result.error || 'Unknown error'}`, "error");
       }
     } catch (error: any) {
       console.error('Email send error:', error);
@@ -250,13 +265,15 @@ export default function AdminTables({ table }: Props) {
     }
   };
 
-  // Open Email Modal - Works for both Appointments and Plan Purchases
+  // Open Email Modal
   const openEmailModal = (record: Record) => {
     setSelectedEmailRecord(record);
     
-    // Set email subject and status based on table type
+    // Set email subject based on table type
     let subject = '';
     let status = record.status || 'pending';
+    
+    const customerName = record.full_name || record.name || record.customer_name || 'Customer';
     
     if (table === 'appointments') {
       subject = `Regarding your appointment on ${record.appointment_date || 'scheduled date'}`;
@@ -269,7 +286,7 @@ export default function AdminTables({ table }: Props) {
     
     setEmailData({
       subject: subject,
-      response_message: '',
+      message: `Dear ${customerName},\n\n`,
       status: status
     });
     setShowEmailModal(true);
@@ -328,7 +345,7 @@ export default function AdminTables({ table }: Props) {
     try {
       const token = getToken();
       await Promise.all(selectedRows.map(id => 
-        fetch(`${API_URL}/${table}.php?id=${id}`, {
+        fetch(`${API_URL}/admin/${table}/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -342,7 +359,6 @@ export default function AdminTables({ table }: Props) {
     }
   };
 
-  // Check if current table has email field (Appointments or Plan Purchases)
   const hasEmailField = (row: Record): boolean => {
     return !!(row.email || row.customer_email);
   };
@@ -387,7 +403,7 @@ export default function AdminTables({ table }: Props) {
         </div>
       )}
 
-      {/* Email Modal - Works for Appointments AND Plan Purchases */}
+      {/* Email Modal */}
       {isEmailTable() && showEmailModal && selectedEmailRecord && (
         <div
           style={{
@@ -456,7 +472,7 @@ export default function AdminTables({ table }: Props) {
               </button>
             </div>
 
-            {/* Customer Info - Dynamic based on table */}
+            {/* Customer Info */}
             <div style={{
               background: "#f8fafc",
               padding: "16px",
@@ -511,9 +527,9 @@ export default function AdminTables({ table }: Props) {
                   Message *
                 </label>
                 <textarea
-                  value={emailData.response_message}
-                  onChange={(e) => setEmailData({...emailData, response_message: e.target.value})}
-                  rows={6}
+                  value={emailData.message}
+                  onChange={(e) => setEmailData({...emailData, message: e.target.value})}
+                  rows={8}
                   style={{
                     width: "100%",
                     padding: "12px",
@@ -1267,7 +1283,7 @@ const Modal = ({ title, children, onClose, onSubmit, submitText }: any) => (
   </div>
 );
 
-// ==================== FORM FIELD COMPONENT with IMAGE UPLOAD ====================
+// ==================== FORM FIELD COMPONENT ====================
 const FormField = ({ label, type, value, onChange, isImage, onImageUpload, uploading }: any) => (
   <div style={{ marginBottom: "20px" }}>
     <label style={{ 

@@ -17,7 +17,8 @@ const Layout = ({ children }: Props) => {
     return saved ? JSON.parse(saved) : false;
   });
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // 🔥 YAHAN BADLA - pehle true tha ab false kar diya
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));

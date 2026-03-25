@@ -56,15 +56,15 @@ const Footer = ({ darkMode }: Props) => {
             <ul className="contact-info">
               <li>
                 <MapPin size={18} />
-                <span>123 Business Street, Tech City, 12345</span>
+                <span>R870 block17</span>
               </li>
               <li>
                 <Phone size={18} />
-                <span>+123 (4567) 890</span>
+                <span>03322751363</span>
               </li>
               <li>
                 <Mail size={18} />
-                <span>info@toptech.com</span>
+                <span>xahmedmalik30600@gmail.com</span>
               </li>
             </ul>
           </div>

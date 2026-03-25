@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\AppointmentMail;
 
 class AppointmentController extends Controller
 {
@@ -34,16 +32,6 @@ class AppointmentController extends Controller
                 'message' => $validated['message'] ?? null,
                 'status' => 'pending'
             ]);
-
-            // Send email to admin
-            try {
-                Mail::to('admin@yourdomain.com')->send(new AppointmentMail($validated));
-                // You can also send confirmation email to customer
-                // Mail::to($validated['email'])->send(new AppointmentConfirmationMail($validated));
-            } catch (\Exception $e) {
-                // Log email error but don't stop the process
-                \Log::error('Failed to send appointment email: ' . $e->getMessage());
-            }
 
             return response()->json([
                 'success' => true,
@@ -87,18 +75,15 @@ class AppointmentController extends Controller
                 $appointment->save();
             }
 
-            // Send email to customer
-            Mail::to($appointment->email)->send(new AppointmentResponseMail($request->all(), $appointment));
-
             return response()->json([
                 'success' => true,
-                'message' => 'Email sent successfully'
+                'message' => 'Response saved successfully'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send email: ' . $e->getMessage()
+                'message' => 'Failed to save response: ' . $e->getMessage()
             ], 500);
         }
     }
