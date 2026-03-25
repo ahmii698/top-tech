@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 20, 2026 at 01:09 PM
+-- Generation Time: Mar 25, 2026 at 07:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -31,7 +31,7 @@ CREATE TABLE `appointments` (
   `id` int(11) NOT NULL,
   `full_name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `phone` varchar(20) NOT NULL,
+  `phone` varchar(255) DEFAULT NULL,
   `appointment_date` date NOT NULL,
   `appointment_time` time NOT NULL,
   `message` text DEFAULT NULL,
@@ -52,8 +52,11 @@ INSERT INTO `appointments` (`id`, `full_name`, `email`, `phone`, `appointment_da
 (6, 'Ahmed Ba', 'xahmedmalik30@gmail.com', '32321313221', '2026-04-21', '02:34:00', 'gdfsfasas', '2026-03-20 04:57:15', 'pending', '2026-03-20 04:57:15'),
 (7, 'Ahmed Ba', 'xahmedmalik30@gmail.com', 'afsads', '2026-04-23', '02:34:00', 'fdsaf', '2026-03-20 05:00:29', 'pending', '2026-03-20 05:00:29'),
 (8, 'Ahmed Ba', 'xahmedmalik30@gmail.com', 'afsads', '2026-04-23', '02:34:00', 'fdsaf', '2026-03-20 10:03:22', 'pending', NULL),
-(9, 'sed', 'sed@gmail.com', '32423423423243', '2026-04-27', '03:21:00', 'asfas', '2026-03-20 10:04:51', 'pending', NULL),
-(10, 'ahad bhai', 'ahadbhai@gmail.com', '03333333333', '2026-04-23', '02:13:00', 'asdasdas', '2026-03-20 10:54:36', 'pending', NULL);
+(11, 'asdas', 'xahmedmalik30@gmail.com', '0443323423', '2026-04-25', '11:11:00', 'dasdasdas', '2026-03-25 13:51:17', 'pending', NULL),
+(12, 'asdas', 'xahmedmalik30@gmail.com', '0443323423', '2026-04-25', '11:11:00', 'dasdasdas', '2026-03-25 13:51:32', 'pending', NULL),
+(13, 'Ahmed Ba', 'xahmedmalik30@gmail.com', '033221321312', '2026-04-25', '14:22:00', 'sadasd', '2026-03-25 13:52:04', 'pending', NULL),
+(14, 'Ahmed Ba', 'xahmedmalik30@gmail.com', '0392389479283', '2026-04-04', '14:22:00', 'dasdas', '2026-03-25 13:56:01', 'pending', NULL),
+(15, 'Ahmed', 'xahmedmalik30@gmail.com', '03322751363', '2026-04-04', '14:22:00', 'hghfd', '2026-03-25 14:53:24', 'pending', NULL);
 
 -- --------------------------------------------------------
 
@@ -114,13 +117,6 @@ CREATE TABLE `cache` (
   `expiration` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `cache`
---
-
-INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
-('laravel-cache-otp_xahmedmalik30600@gmail.com', 'i:578998;', 1773832977);
-
 -- --------------------------------------------------------
 
 --
@@ -160,6 +156,23 @@ CREATE TABLE `company_info` (
 
 INSERT INTO `company_info` (`id`, `address`, `phone`, `email`, `business_hours`, `map_embed_url`, `facebook_url`, `twitter_url`, `instagram_url`, `linkedin_url`, `created_at`, `updated_at`) VALUES
 (1, '123 Tech Street, Silicon Valley, CA 94025', '+1 (555) 123-4567', 'info@toptech.com', 'Monday - Friday: 9:00 AM - 6:00 PM\nSaturday: 10:00 AM - 4:00 PM\nSunday: Closed', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3168.636256472517!2d-122.088654484685!3d37.422408979825!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fba5b3c4c0f0d%3A0x8c3c5f5f5f5f5f5f!2sGoogleplex!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus', '#', '#', '#', '#', '2026-03-10 10:05:13', '2026-03-10 10:05:13');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `contacts`
+--
+
+CREATE TABLE `contacts` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `subject` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -296,6 +309,13 @@ CREATE TABLE `migrations` (
   `batch` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `migrations`
+--
+
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
+(1, '2019_12_14_000001_create_personal_access_tokens_table', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -309,6 +329,14 @@ CREATE TABLE `newsletter_subscribers` (
   `subscribed_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `unsubscribed_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `newsletter_subscribers`
+--
+
+INSERT INTO `newsletter_subscribers` (`id`, `email`, `is_active`, `subscribed_at`, `unsubscribed_at`) VALUES
+(1, 'xahmedmalik30@gmail.com', 1, '2026-03-25 09:41:37', NULL),
+(2, 'xahmedmalik30600@gmail.com', 1, '2026-03-25 10:47:02', NULL);
 
 -- --------------------------------------------------------
 
@@ -346,6 +374,25 @@ CREATE TABLE `password_resets` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `personal_access_tokens`
+--
+
+CREATE TABLE `personal_access_tokens` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) UNSIGNED NOT NULL,
+  `name` text NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `plan_purchases`
 --
 
@@ -370,7 +417,9 @@ CREATE TABLE `plan_purchases` (
 
 INSERT INTO `plan_purchases` (`id`, `plan_id`, `plan_name`, `price`, `period`, `customer_name`, `customer_email`, `customer_phone`, `message`, `status`, `created_at`, `updated_at`) VALUES
 (1, 2, 'Business', '$2,999', 'project', 'Ahmed', 'ahmedmalik30600@gmail.com', '03322751363', 'i love your work', 'pending', '2026-03-18 03:57:12', '2026-03-18 03:57:12'),
-(2, 1, 'Starter', '$999', 'project', 'sufiyan', 'xahmedmalik30@gmail.com', '03322751363', 'sadas', 'pending', '2026-03-18 04:50:06', '2026-03-18 04:50:06');
+(2, 1, 'Starter', '$999', 'project', 'sufiyan', 'xahmedmalik30@gmail.com', '03322751363', 'sadas', 'pending', '2026-03-18 04:50:06', '2026-03-18 04:50:06'),
+(3, 3, 'Enterprise', 'Custom', 'project', 'Ahmiii', 'xahmedmalik30600@gmail.com', '03322751363', 'asdasdsa', 'pending', '2026-03-25 07:35:06', '2026-03-25 07:35:06'),
+(4, 3, 'Enterprise', 'Custom', 'project', 'Ahmed Ba', 'xahmedmalik30@gmail.com', '534534', 'asasasd', 'pending', '2026-03-25 08:28:38', '2026-03-25 08:28:38');
 
 -- --------------------------------------------------------
 
@@ -650,6 +699,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
+('8G80yAy8h7jMBu6m2EXSWukCAYh5vHJefcQiPSwl', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoibkZUTVlhSVZYd0FJRjE5RWdTTFdxbDNzeXkwREtLSnVFMDBYblI2biI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1774439999),
 ('jgRi0ANNNg7DRLMTBLoxXPwlF11PBhlMNFD1WUFu', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiS0RTWHFmelFUbjduWENqRHhURVh4Q2R3TndhU3BXU3pFVU5jUHN2QiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1773141632),
 ('JLEOw8AungxhIr9lGmyAtnkmZJoh4s6DNqAaMpgC', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiQVNhUTlFakdVMndOeWQxZktzYVVrVTh1NElvTmthWHp1NVJsbWYxaiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1773310566),
 ('LZCS8XhtnYsQJs5GzEiTe9WFlYeHmn3a8IqsPYPF', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiQ1JiaXNucmdaNHNRR1FJWWFKTmM0QlEzMVJOdElhOERWMnZhcUZXayI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7Tjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1773214512),
@@ -833,7 +883,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `avatar`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'xahmedmalik30600@gmail.com', '$2y$12$FTCCxmgrDSYAavVL7O81/eZCc/Hh8XWg8p3zwwKmTAXF0LdF8EO9W', 'admin', NULL, '2026-03-10 09:59:28', '2026-03-18 04:47:47');
+(1, 'Admin', 'xahmedmalik30600@gmail.com', '$2y$12$lQ3/8w0QzUqzLoQh9Uj2KOhtsWg7In7xZAk1meSiwvazO5tBpJZZa', 'admin', NULL, '2026-03-10 09:59:28', '2026-03-25 07:02:34');
 
 --
 -- Indexes for dumped tables
@@ -874,6 +924,12 @@ ALTER TABLE `cache_locks`
 -- Indexes for table `company_info`
 --
 ALTER TABLE `company_info`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `contacts`
+--
+ALTER TABLE `contacts`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -932,6 +988,15 @@ ALTER TABLE `pages`
 ALTER TABLE `password_resets`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_user_reset` (`user_id`);
+
+--
+-- Indexes for table `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`),
+  ADD KEY `personal_access_tokens_expires_at_index` (`expires_at`);
 
 --
 -- Indexes for table `plan_purchases`
@@ -1038,7 +1103,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `appointments`
 --
 ALTER TABLE `appointments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `banners`
@@ -1057,6 +1122,12 @@ ALTER TABLE `blog_posts`
 --
 ALTER TABLE `company_info`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `contacts`
+--
+ALTER TABLE `contacts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `contact_messages`
@@ -1092,13 +1163,13 @@ ALTER TABLE `hero_section`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `newsletter_subscribers`
 --
 ALTER TABLE `newsletter_subscribers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `pages`
@@ -1113,10 +1184,16 @@ ALTER TABLE `password_resets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `plan_purchases`
 --
 ALTER TABLE `plan_purchases`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `portfolio`
