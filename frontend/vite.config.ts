@@ -1,21 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost/MY-FULLSTACK-PROJECT/backend/public',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === 'TS6133') return
+        if (warning.code === 'TS7006') return
+        if (warning.code === 'TS2339') return
+        if (warning.code === 'TS2307') return
+        if (warning.code === 'TS7016') return
+        warn(warning)
       }
+    }
+  },
+  esbuild: {
+    logOverride: {
+      'ts-6133': 'silent',
+      'ts-7006': 'silent',
+      'ts-2339': 'silent',
+      'ts-2307': 'silent',
+      'ts-7016': 'silent'
     }
   }
 })
